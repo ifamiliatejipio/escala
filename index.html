@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escala — Equipe de Consolidação</title>
+<style>
+  :root{
+    --bg:#f6f5f9; --card:#ffffff; --ink:#1f2430; --muted:#6b7280;
+    --accent:#5b5bd6; --accent-ink:#ffffff; --border:#e5e3ef;
+    --ok:#1f8a55; --ok-bg:#e8f7ef; --warn:#b45309; --warn-bg:#fff4e5;
+    --danger:#b91c1c; --danger-bg:#fdecec;
+    --eles:#3b6fd6; --elas:#c23b7a; --topoh:#2f9e6f; --topof:#0f9e9e; --sup:#8a5cf6;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.45;}
+  header{background:linear-gradient(135deg,#5b5bd6,#8b6fd6); color:#fff; padding:20px 28px;}
+  header h1{margin:0; font-size:1.35rem;}
+  header p{margin:4px 0 0; opacity:.9; font-size:.88rem;}
+  #tabs{display:flex; gap:4px; padding:0 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; overflow-x:auto;}
+  .tab-btn{border:none; background:none; padding:13px 14px; font-size:.9rem; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap;}
+  .tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+  main{max-width:1180px; margin:0 auto; padding:20px 22px 80px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px;}
+  .card h2{margin:0 0 10px; font-size:1.02rem;}
+  .card h3{margin:0 0 8px; font-size:.92rem;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  .grid4{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px;}
+  .grid5{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+  @media (max-width:820px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr 1fr;}}
+  label{display:block; font-size:.8rem; font-weight:600; color:var(--muted); margin-bottom:4px;}
+  input[type=text],input[type=date],input[type=month],input[type=number],input[type=time],input[type=email],input[type=password],select,textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:.88rem; background:#fff; color:var(--ink); font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:52px;}
+  .field{margin-bottom:11px;}
+  .checks{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .check-pill{display:flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:20px; padding:6px 12px; font-size:.83rem; cursor:pointer; user-select:none; background:#fafafe;}
+  .check-pill input{margin:0;}
+  .check-pill.checked{background:#ecebfc; border-color:var(--accent); color:var(--accent);}
+  button{cursor:pointer; border:none; border-radius:8px; padding:8px 15px; font-size:.85rem; font-weight:600; background:var(--accent); color:#fff;}
+  button.secondary{background:#eceafb; color:var(--accent);}
+  button.ghost{background:transparent; color:var(--muted); border:1px solid var(--border);}
+  button.danger{background:var(--danger-bg); color:var(--danger);}
+  button.small{padding:4px 9px; font-size:.75rem;}
+  button:disabled{opacity:.5; cursor:not-allowed;}
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  th,td{text-align:left; padding:8px 7px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{color:var(--muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.02em;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:20px; font-size:.7rem; font-weight:700; color:#fff;}
+  .badge.Eles{background:var(--eles);} .badge.Elas{background:var(--elas);}
+  .badge.TopoH{background:var(--topoh);} .badge.TopoF{background:var(--topof);} .badge.Supervisor{background:var(--sup);}
+  .badge.on{background:var(--ok);} .badge.off{background:var(--muted);} .badge.review{background:var(--warn);} .badge.dupla{background:var(--accent);}
+  .pill-list{display:flex; flex-wrap:wrap; gap:4px;}
+  .tiny{font-size:.74rem; color:var(--muted);}
+  .row-actions{display:flex; gap:5px; flex-wrap:wrap;}
+  .rep-row{margin-bottom:10px; padding-bottom:9px; border-bottom:1px dashed var(--border);}
+  .rep-row:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .rep-row-fields{display:grid; grid-template-columns:1fr 1fr 1fr 1.3fr auto; gap:8px; align-items:end;}
+  @media (max-width:720px){.rep-row-fields{grid-template-columns:1fr;}}
+  .rep-semana-atalho{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:6px; padding:6px 8px; background:#f7f7fc; border-radius:6px;}
+  .rep-semana-atalho select, .rep-semana-atalho input[type=month]{padding:5px 6px; font-size:.78rem;}
+  .culto-card{border:1px solid var(--border); border-radius:10px; padding:13px 15px; margin-bottom:11px; background:#fdfdff;}
+  .culto-card.low{border-color:var(--warn); background:var(--warn-bg);}
+  .culto-header{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; flex-wrap:wrap; gap:6px;}
+  .culto-header .titulo{font-weight:700;}
+  .culto-header .count{font-size:.78rem; color:var(--muted);}
+  .cat-group{margin-bottom:7px;}
+  .cat-group-label{font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
+  .cat-group.Eles .cat-group-label{color:var(--eles);} .cat-group.Elas .cat-group-label{color:var(--elas);}
+  .cat-group.TopoH .cat-group-label{color:var(--topoh);} .cat-group.TopoF .cat-group-label{color:var(--topof);}
+  .cat-group.Supervisor .cat-group-label{color:var(--sup);}
+  .person-chip{display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid var(--border); border-radius:20px; padding:3px 5px 3px 11px; font-size:.8rem; margin:2px 4px 2px 0;}
+  .person-chip button{padding:2px 6px; font-size:.68rem; border-radius:14px;}
+  .person-chip .btn-nota{background:#eceafb; color:var(--accent);}
+  .person-chip .btn-rm{background:var(--danger-bg); color:var(--danger);}
+  .vinculo-resultado-item{padding:8px 12px; font-size:.85rem; cursor:pointer; border-bottom:1px solid var(--border);}
+  .vinculo-resultado-item:last-child{border-bottom:none;}
+  .vinculo-resultado-item:hover{background:#f1f0fa;}
+  .vinculo-resultado-item .tiny{display:block;}
+  .chip-nota{font-size:.68rem; color:var(--warn); display:block; margin:1px 0 3px 4px;}
+  .add-person-row{display:flex; gap:6px; margin-top:5px;}
+  .add-person-row select{flex:1;}
+  .banner{padding:9px 13px; border-radius:8px; font-size:.83rem; margin-bottom:12px;}
+  .banner.info{background:#eef1ff; color:#3949ab;}
+  .banner.warn{background:var(--warn-bg); color:var(--warn);}
+  .banner.danger{background:var(--danger-bg); color:var(--danger);}
+  .banner.ok{background:var(--ok-bg); color:var(--ok);}
+  .warn-list{margin:0; padding-left:17px; font-size:.82rem;}
+  .warn-list li{margin-bottom:3px;}
+  .sup-alert{display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px; background:var(--danger-bg); color:var(--danger); font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; vertical-align:middle;}
+  .realocar-row{display:flex; gap:6px; margin-top:6px; align-items:center; flex-wrap:wrap;}
+  .realocar-row select{font-size:.78rem; padding:4px 6px; max-width:100%;}
+  .empty-state{color:var(--muted); font-size:.86rem; padding:18px 0; text-align:center;}
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;}
+  code{background:#f1f0fa; padding:1px 5px; border-radius:4px; font-size:.8rem;}
+  pre.export-preview{white-space:pre-wrap; background:#f7f7fb; border:1px solid var(--border); border-radius:8px; padding:12px; font-size:.82rem; max-height:420px; overflow:auto;}
+  #toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1f2430; color:#fff; padding:9px 17px; border-radius:8px; font-size:.83rem; opacity:0; pointer-events:none; transition:opacity .25s; z-index:100;}
+  #toast.show{opacity:1;}
+  .filter-btn{padding:6px 12px; border-radius:20px; font-size:.78rem; background:#f1f0fa; color:var(--muted); font-weight:600;}
+  .filter-btn.active{background:var(--accent); color:#fff;}
+  .search-box{max-width:280px;}
+
+  /* ---- Impressão / Gerar PDF ---- */
+  #print-area{display:none;}
+  #print-area h1{font-size:16px; margin:0 0 4px;}
+  #print-area .print-meta{font-size:11px; color:#555; margin:0 0 14px;}
+  #print-area table.print-table{width:100%; border-collapse:collapse; font-size:10.5px;}
+  #print-area table.print-table th, #print-area table.print-table td{border:1px solid #999; padding:4px 6px; text-align:left; vertical-align:top;}
+  #print-area table.print-table th{background:#eee;}
+  #print-area .print-bloco{margin-bottom:18px;}
+  #print-area .print-bloco-titulo{font-size:14px; font-weight:700; margin:0 0 8px;}
+  #print-area .print-culto{break-inside:avoid; margin-bottom:12px;}
+  #print-area .print-culto h2{font-size:12px; margin:0 0 4px;}
+  #print-area .print-culto ol{margin:0; padding-left:18px; font-size:11px;}
+  #print-area .print-culto li{margin-bottom:2px;}
+  #print-area .print-culto li.sup{font-weight:700;}
+  @media print{
+    body *{visibility:hidden;}
+    #print-area, #print-area *{visibility:visible;}
+    #print-area{display:block; position:absolute; top:0; left:0; width:100%; padding:16px;}
+  }
+</style>
+<!-- Firebase (opcional): só é usado se a aba "Nuvem" for configurada com um projeto Firebase próprio.
+     Sem configuração, o app funciona 100% offline como sempre funcionou. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Escala — Equipe de Consolidação</h1>
+  <p>Cadastro de voluntários, disponibilidade, vínculos, bloqueios de data e geração automática da escala mensal.</p>
+</header>
+
+<div id="tabs">
+  <button class="tab-btn" data-tab="pessoas">Pessoas</button>
+  <button class="tab-btn" data-tab="escala">Gerar Escala</button>
+  <button class="tab-btn" data-tab="config">Configurações</button>
+  <button class="tab-btn" data-tab="dados">Importar / Exportar</button>
+  <button class="tab-btn" data-tab="nuvem">☁️ Nuvem</button>
+</div>
+
+<main id="main"></main>
+<div id="toast"></div>
+<div id="print-area"></div>
+
+<script>
+/* ==========================================================================
+   ESTADO E CONSTANTES
+   ========================================================================== */
+const SLOTS = [
+  {key:'terca',  label:'Terça-feira',  labelCurta:'TERÇA FEIRA',   weekday:2, horaFixa:null},
+  {key:'quarta', label:'Quarta-feira', labelCurta:'QUARTA FEIRA',  weekday:3, horaFixa:null},
+  {key:'quinta', label:'Quinta-feira', labelCurta:'QUINTA FEIRA',  weekday:4, horaFixa:null},
+  {key:'dom10',  label:'Domingo 10h',  labelCurta:'DOMINGO', weekday:0, horaFixa:'10:00'},
+  {key:'dom15',  label:'Domingo 15h',  labelCurta:'DOMINGO', weekday:0, horaFixa:'15:00'},
+  {key:'dom17',  label:'Domingo 17h',  labelCurta:'DOMINGO', weekday:0, horaFixa:'17:00'},
+  {key:'dom19',  label:'Domingo 19h',  labelCurta:'DOMINGO', weekday:0, horaFixa:'19:00'},
+];
+const SLOT_MAP = Object.fromEntries(SLOTS.map(s=>[s.key,s]));
+const MINISTERIOS = ['Eles','Elas','Topo'];
+const CATEGORIAS = ['Eles','TopoH','TopoF','Elas','Supervisor'];
+const CATEGORIA_LABEL = {Eles:'Eles', Elas:'Elas', TopoH:'Topo (homem)', TopoF:'Topo (mulher)', Supervisor:'Supervisor(a)'};
+
+const DEFAULT_CONFIG = {
+  quotas: {Eles:2, Elas:3, TopoH:1, TopoF:1, Supervisor:1},
+  horarios: {terca:'19:30', quarta:'19:30', quinta:'19:30'},
+  minutosAntecedencia: 50,
+};
+
+let state = { people: [], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+let escalaAtual = null;
+let blocosExportAtuais = [];
+let currentTab = 'pessoas';
+let editingId = null;
+let filtroPessoas = 'todos'; // todos | ativos | inativos | supervisores | revisar
+let buscaPessoas = '';
+let vinculoSelecionados = { positivo: [], negativo: [] }; // ids selecionados nos seletores de vínculo do formulário aberto
+
+function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+/* Embaralha uma cópia do array (Fisher-Yates). Usado na geração da escala pra permitir "sortear outra combinação". */
+function embaralhar(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function esc(str){ return String(str==null?'':str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function findPerson(id){ return state.people.find(p=>p.id===id); }
+function nomeComRede(p){ if(!p) return '?'; return p.rede ? `${p.nome} (${p.rede})` : p.nome; }
+function ativoDe(p){ return p.ativo !== false; }
+/* Resumo textual da disponibilidade recorrente de uma pessoa, ex: "Terça-feira, Domingo 10h". */
+function disponibilidadeResumo(p){
+  return SLOTS.filter(s=>p && p.disponibilidade && p.disponibilidade[s.key]).map(s=>s.label).join(', ') || 'Nenhuma disponibilidade marcada';
+}
+
+function categoriaDe(p){
+  if(p.supervisor) return 'Supervisor';
+  if(p.ministerio==='Topo') return p.genero==='F' ? 'TopoF' : 'TopoH';
+  return p.ministerio;
+}
+
+/* ==========================================================================
+   VÍNCULOS
+   ========================================================================== */
+function getUnidades(apenasAtivos){
+  const pool = apenasAtivos ? state.people.filter(ativoDe) : state.people;
+  const poolIds = new Set(pool.map(p=>p.id));
+  const visited = new Set();
+  const unidades = [];
+  for(const p of pool){
+    if(visited.has(p.id)) continue;
+    const grupo = [];
+    const fila = [p.id];
+    visited.add(p.id);
+    while(fila.length){
+      const id = fila.shift();
+      const pessoa = findPerson(id);
+      grupo.push(id);
+      (pessoa.vinculoIds||[]).forEach(vid=>{
+        if(!visited.has(vid) && poolIds.has(vid)){
+          visited.add(vid);
+          fila.push(vid);
+        }
+      });
+    }
+    unidades.push(grupo);
+  }
+  return unidades;
+}
+
+/* ==========================================================================
+   CULTOS DO MÊS
+   ========================================================================== */
+function gerarCultosDoMes(anoMes){
+  const [ano, mes] = anoMes.split('-').map(Number);
+  const cultos = [];
+  const totalDias = new Date(ano, mes, 0).getDate();
+  for(let dia=1; dia<=totalDias; dia++){
+    const data = new Date(ano, mes-1, dia);
+    const wd = data.getDay();
+    SLOTS.filter(s=>s.weekday===wd).forEach(s=>{
+      const horaCulto = s.horaFixa || state.config.horarios[s.key] || null;
+      cultos.push({
+        id: `c_${ano}${String(mes).padStart(2,'0')}${String(dia).padStart(2,'0')}_${s.key}`,
+        data, slot: s.key, horaCulto,
+        label: `${s.label} — ${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`,
+        dataISO: `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`,
+        assigned: {Eles:[], Elas:[], TopoH:[], TopoF:[], Supervisor:[]},
+        observacoes: {}, // personId -> texto da nota manual
+      });
+    });
+  }
+  cultos.sort((a,b)=> a.data - b.data || a.slot.localeCompare(b.slot));
+  return cultos;
+}
+function totalCulto(culto){ return CATEGORIAS.reduce((s,c)=>s+culto.assigned[c].length,0); }
+function quotaTotal(){ return CATEGORIAS.reduce((s,c)=>s+(state.config.quotas[c]||0),0); }
+
+/* Compara datas ISO (YYYY-MM-DD) como texto — a ordem lexicográfica já corresponde à ordem cronológica. */
+function dataDentroDoIntervalo(dataISO, inicio, fim){
+  if(!inicio) return false;
+  const f = fim || inicio;
+  return dataISO >= inicio && dataISO <= f;
+}
+function pessoaBloqueada(pessoa, culto){
+  return (pessoa.bloqueios||[]).some(b => dataDentroDoIntervalo(culto.dataISO, b.data, b.dataFim) && (!b.horario || b.horario===culto.slot));
+}
+function pessoaTemPedidoPara(pessoa, culto){
+  return (pessoa.pedidos||[]).some(pd => dataDentroDoIntervalo(culto.dataISO, pd.data, pd.dataFim) && (!pd.horario || pd.horario===culto.slot));
+}
+function pessoaElegivel(pessoa, culto){
+  if(pessoaBloqueada(pessoa, culto)) return false;
+  if(pessoaTemPedidoPara(pessoa, culto)) return true;
+  return !!(pessoa.disponibilidade||{})[culto.slot];
+}
+/* Cultos onde TODOS os membros da unidade são elegíveis (disponibilidade/pedido/bloqueio), ignorando
+   deliberadamente a quota da categoria — usado pelo botão "Realocar" da lista de não alocados, pra permitir
+   forçar a pessoa/vínculo pra um culto do dia/horário dela mesmo que já esteja no limite padrão. */
+function cultosCompativeisIgnorandoQuota(membrosIds){
+  if(!escalaAtual) return [];
+  const pessoas = (membrosIds||[]).map(findPerson).filter(Boolean);
+  if(!pessoas.length) return [];
+  return escalaAtual.cultos.filter(c => pessoas.every(p=>pessoaElegivel(p,c)));
+}
+
+/* ==========================================================================
+   GERAÇÃO DA ESCALA
+   ========================================================================== */
+function gerarEscala(anoMes){
+  const cultos = gerarCultosDoMes(anoMes);
+  // Embaralha a ordem de processamento das unidades — é isso que permite "sortear outra combinação"
+  // pra um mesmo mês: mesmas regras/restrições, mas os empates (quem entra em cada culto) saem diferentes.
+  const unidades = embaralhar(getUnidades(true)).map(ids => ({ ids, alocada:false }));
+  const naoAlocados = [];
+  const conflitos = [];
+
+  function membros(u){ return u.ids.map(findPerson); }
+
+  function contagemCategorias(u){
+    const c = {};
+    membros(u).forEach(m=>{ const cat=categoriaDe(m); c[cat]=(c[cat]||0)+1; });
+    return c;
+  }
+  function unidadeCabe(u, culto){
+    const c = contagemCategorias(u);
+    return Object.entries(c).every(([cat,qtd])=> culto.assigned[cat].length + qtd <= (state.config.quotas[cat]||0));
+  }
+  /* true se algum membro da unidade tem conflito de "não pode servir junto" com alguém já escalado nesse culto */
+  function temConflitoDeConflito(u, culto){
+    const idsNoCulto = new Set(CATEGORIAS.flatMap(cat=>culto.assigned[cat]));
+    return membros(u).some(m=>{
+      if((m.naoVinculoIds||[]).some(id=>idsNoCulto.has(id))) return true;
+      for(const idNoCulto of idsNoCulto){
+        const outro = findPerson(idNoCulto);
+        if(outro && (outro.naoVinculoIds||[]).includes(m.id)) return true;
+      }
+      return false;
+    });
+  }
+  function cultosElegiveisPara(u, apenasComPedido){
+    return cultos.filter(c=>{
+      const ms = membros(u);
+      if(!ms.every(m=>pessoaElegivel(m,c))) return false;
+      if(apenasComPedido && !ms.some(m=>pessoaTemPedidoPara(m,c))) return false;
+      if(temConflitoDeConflito(u,c)) return false;
+      return unidadeCabe(u,c);
+    });
+  }
+  function atribuir(u, culto){
+    membros(u).forEach(m=>{ culto.assigned[categoriaDe(m)].push(m.id); });
+    u.alocada = true;
+    u.vezes = (u.vezes||0) + 1;
+  }
+  function ehDomingo(culto){ return SLOT_MAP[culto.slot].weekday===0; }
+
+  // Fase 1: pedidos de data específica
+  unidades.forEach(u=>{
+    const ms = membros(u);
+    if(!ms.some(m=>(m.pedidos||[]).length)) return;
+    let opcoes = cultosElegiveisPara(u, true);
+    if(opcoes.length){
+      opcoes = embaralhar(opcoes).sort((a,b)=>totalCulto(a)-totalCulto(b));
+      atribuir(u, opcoes[0]);
+    } else {
+      if(u.ids.length>1){
+        conflitos.push({
+          unidade: ms.map(m=>nomeComRede(m)).join(' + '),
+          motivo: 'Pedido de data específica não pôde ser atendido para todo o vínculo (verifique disponibilidade/bloqueios dos demais).'
+        });
+      }
+    }
+  });
+
+  // Fase 2a: cobertura de supervisor(a) — tenta balancear entre domingo e dia de semana.
+  // Se não houver supervisor(a) suficiente pra cobrir todos os cultos, a ideia é que a falta fique
+  // dividida entre os dois tipos (ex: 1 domingo + 1 dia de semana sem supervisor) em vez de concentrada
+  // só num tipo. A cada supervisor(a) alocado(a), recalcula qual tipo está com menor cobertura e prioriza ele.
+  const cultosDomingoComSupervisor = cultos.filter(c=>ehDomingo(c) && (state.config.quotas.Supervisor||0)>0);
+  const cultosSemanaComSupervisor = cultos.filter(c=>!ehDomingo(c) && (state.config.quotas.Supervisor||0)>0);
+  function coberturaSupervisor(lista){
+    const quotaTotalTipo = lista.length * (state.config.quotas.Supervisor||0);
+    if(!quotaTotalTipo) return 1; // sem demanda desse tipo — trata como já coberto
+    const preenchidoTipo = lista.reduce((s,c)=>s+c.assigned.Supervisor.length,0);
+    return preenchidoTipo/quotaTotalTipo;
+  }
+  let candidatosSupervisor = embaralhar(
+    unidades.filter(u=>!u.alocada && membros(u).some(m=>categoriaDe(m)==='Supervisor'))
+  ).sort((a,b)=>cultosElegiveisPara(a,false).length - cultosElegiveisPara(b,false).length);
+  candidatosSupervisor.forEach(u=>{
+    if(u.alocada) return;
+    const opcoes = cultosElegiveisPara(u,false);
+    if(!opcoes.length) return; // sem opção viável — Fase 2 registra como não alocado
+    const tipoPreferido = coberturaSupervisor(cultosDomingoComSupervisor) <= coberturaSupervisor(cultosSemanaComSupervisor) ? 'domingo' : 'semana';
+    const opcoesOrdenadas = embaralhar(opcoes).sort((a,b)=>{
+      const aPref = (ehDomingo(a) ? 'domingo' : 'semana')===tipoPreferido ? 0 : 1;
+      const bPref = (ehDomingo(b) ? 'domingo' : 'semana')===tipoPreferido ? 0 : 1;
+      if(aPref!==bPref) return aPref-bPref;
+      return totalCulto(a)-totalCulto(b);
+    });
+    atribuir(u, opcoesOrdenadas[0]);
+  });
+
+  // Fase 2: demais unidades — mais restritas primeiro
+  const pendentes = unidades.filter(u=>!u.alocada).map(u=>({u, opcoes: cultosElegiveisPara(u,false)}));
+  pendentes.sort((a,b)=>a.opcoes.length-b.opcoes.length);
+  pendentes.forEach(item=>{
+    if(item.u.alocada) return;
+    const opcoes = cultosElegiveisPara(item.u,false);
+    if(!opcoes.length){
+      naoAlocados.push({
+        unidade: membros(item.u).map(m=>nomeComRede(m)).join(' + '),
+        motivo: membros(item.u).length>1 ? 'Nenhum culto compatível com a disponibilidade de todos os membros do vínculo.' : 'Nenhum culto compatível com a disponibilidade informada.',
+        membros: membros(item.u).map(m=>({id:m.id, nome:nomeComRede(m), disponibilidade:disponibilidadeResumo(m), observacoes:(m.observacoes||'').trim()}))
+      });
+      return;
+    }
+    const opcoesEmbaralhadas = embaralhar(opcoes).sort((a,b)=>totalCulto(a)-totalCulto(b));
+    atribuir(item.u, opcoesEmbaralhadas[0]);
+  });
+
+  // Fase 3: pessoas marcadas como "pode servir 2x" ajudam a fechar vagas que sobraram no mês
+  // (se a unidade for um vínculo de várias pessoas, todos os membros precisam ter a opção marcada,
+  // pra não quebrar a regra de sempre servir junto). Vagas de Supervisor(a) têm prioridade.
+  function faltasDoCulto(c){ return CATEGORIAS.filter(cat=>c.assigned[cat].length<(state.config.quotas[cat]||0)); }
+  function primeiroCultoDaUnidade(u){ return cultos.find(c=>CATEGORIAS.some(cat=>c.assigned[cat].some(id=>u.ids.includes(id)))); }
+  function cultosElegiveisPara2x(u){
+    const primeiro = primeiroCultoDaUnidade(u);
+    return cultos.filter(c=>{
+      const ms = membros(u);
+      if(!ms.every(m=>pessoaElegivel(m,c))) return false;
+      if(temConflitoDeConflito(u,c)) return false;
+      if(!unidadeCabe(u,c)) return false;
+      if(CATEGORIAS.some(cat=>c.assigned[cat].some(id=>u.ids.includes(id)))) return false; // já está nesse mesmo culto
+      if(primeiro && primeiro.dataISO===c.dataISO) return false; // evita 2 cultos no mesmo dia
+      return true;
+    });
+  }
+  const candidatas2x = embaralhar(unidades.filter(u=>u.alocada && membros(u).every(m=>m.podeServir2x)));
+  let algumaAtribuicao2x = true;
+  let protecao2x = (candidatas2x.length+1) * (cultos.length+1);
+  while(algumaAtribuicao2x && protecao2x-->0){
+    algumaAtribuicao2x = false;
+    const cultosComVaga = embaralhar(cultos.filter(c=>faltasDoCulto(c).length))
+      .sort((a,b)=>{
+        const aSup = faltasDoCulto(a).includes('Supervisor') ? 0 : 1;
+        const bSup = faltasDoCulto(b).includes('Supervisor') ? 0 : 1;
+        return aSup-bSup;
+      });
+    for(const c of cultosComVaga){
+      const disponivel = candidatas2x.find(u => (u.vezes||1)<2 && cultosElegiveisPara2x(u).some(cc=>cc.id===c.id));
+      if(disponivel){
+        atribuir(disponivel, c);
+        algumaAtribuicao2x = true;
+        break;
+      }
+    }
+  }
+
+  const shortfalls = cultos.map(c=>{
+    const faltas = CATEGORIAS.filter(cat => c.assigned[cat].length < (state.config.quotas[cat]||0))
+      .map(cat => ({categoria:cat, faltam:(state.config.quotas[cat]||0)-c.assigned[cat].length}));
+    return {culto:c, faltas};
+  }).filter(x=>x.faltas.length);
+
+  const pendentesRevisao = state.people.filter(p=>p.revisar && ativoDe(p)===false).length;
+
+  return { anoMes, cultos, naoAlocados, conflitos, shortfalls, pendentesRevisaoCount: state.people.filter(p=>p.revisar).length };
+}
+
+/* ==========================================================================
+   TABS
+   ========================================================================== */
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  render();
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click', ()=>{
+  if(currentTab==='pessoas' && b.dataset.tab!=='pessoas' && formPessoaTemConteudo()){
+    const salvar = confirm('Você tem alterações não salvas no cadastro de pessoas. Clique OK para salvar antes de sair, ou Cancelar para descartar essas alterações.');
+    if(salvar){ if(!salvarPessoaDoFormulario()) return; }
+    else editingId = null;
+  }
+  switchTab(b.dataset.tab);
+}));
+
+function render(){
+  const main = document.getElementById('main');
+  if(currentTab==='pessoas') main.innerHTML = renderPessoas();
+  else if(currentTab==='escala') main.innerHTML = renderEscala();
+  else if(currentTab==='config') main.innerHTML = renderConfig();
+  else if(currentTab==='nuvem') main.innerHTML = renderNuvem();
+  else main.innerHTML = renderDados();
+  bindEvents();
+  agendarSincronizacaoNuvem();
+}
+
+/* ==========================================================================
+   ABA: PESSOAS
+   ========================================================================== */
+/* Calcula a data de início/fim (YYYY-MM-DD) de uma "semana" (1 a 5) dentro de um mês (YYYY-MM).
+   Semana 1 = dias 1-7, semana 2 = dias 8-14, ... semana 5 = dias 29 até o fim do mês.
+   Retorna null se o mês não tiver aquela semana (ex: mês curto sem semana 5). */
+function semanaParaDatas(anoMes, semanaNum){
+  if(!anoMes) return null;
+  const [ano, mes] = anoMes.split('-').map(Number);
+  const ultimoDia = new Date(ano, mes, 0).getDate();
+  const inicioDia = (semanaNum-1)*7 + 1;
+  if(inicioDia > ultimoDia) return null;
+  const fimDia = Math.min(inicioDia+6, ultimoDia);
+  const fmt = d => `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  return { inicio: fmt(inicioDia), fim: fmt(fimDia) };
+}
+
+function repRowHtml(kind, idx, item){
+  // kind: 'pedido' ou 'bloqueio'
+  return `
+    <div class="rep-row" data-idx="${idx}" data-kind="${kind}">
+      <div class="rep-row-fields">
+        <div class="field" style="margin-bottom:0">
+          <label>De</label>
+          <input type="date" class="rep-data" value="${item.data||''}">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Até <span class="tiny">(p/ período)</span></label>
+          <input type="date" class="rep-data-fim" value="${item.dataFim||''}">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Horário (se domingo)</label>
+          <select class="rep-horario">
+            <option value="">Dia todo</option>
+            <option value="dom10" ${item.horario==='dom10'?'selected':''}>10h</option>
+            <option value="dom15" ${item.horario==='dom15'?'selected':''}>15h</option>
+            <option value="dom17" ${item.horario==='dom17'?'selected':''}>17h</option>
+            <option value="dom19" ${item.horario==='dom19'?'selected':''}>19h</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Motivo (opcional)</label>
+          <input type="text" class="rep-motivo" value="${esc(item.motivo||'')}" placeholder="${kind==='pedido'?'Ex: está de folga nesse período':'Ex: viagem, compromisso'}">
+        </div>
+        <button type="button" class="ghost small rep-remove">Remover</button>
+      </div>
+      <div class="rep-semana-atalho">
+        <span class="tiny">Preencher De/Até por semana:</span>
+        <input type="month" class="rep-mes-ref">
+        <select class="rep-semana-num">
+          <option value="1">Semana 1 (dias 1–7)</option>
+          <option value="2">Semana 2 (dias 8–14)</option>
+          <option value="3">Semana 3 (dias 15–21)</option>
+          <option value="4">Semana 4 (dias 22–28)</option>
+          <option value="5">Semana 5 (dias 29–fim)</option>
+        </select>
+        <button type="button" class="ghost small rep-usar-semana">Usar</button>
+      </div>
+    </div>`;
+}
+
+function renderPessoas(){
+  return `<div id="form-pessoa-wrap">${renderFormPessoa()}</div><div id="tabela-pessoas-wrap">${renderTabelaPessoas()}</div>`;
+}
+
+/* Gera o bloco de campo de vínculo (positivo="precisa servir junto" / negativo="não pode servir junto"). */
+function campoVinculoHtml(tipo, label, placeholder, idsAtuais, outrasPessoas){
+  return `
+  <div class="field">
+    <label>${label}</label>
+    <div class="pill-list" id="vinculo-chips-${tipo}" data-ids="${idsAtuais.join(',')}">
+      ${idsAtuais.length ? idsAtuais.map(id=>{const o=findPerson(id); if(!o) return ''; return `<span class="person-chip">${esc(nomeComRede(o))}<button type="button" class="btn-rm" data-id="${id}">×</button></span>`;}).join('') : '<span class="tiny">Nenhum selecionado.</span>'}
+    </div>
+    ${outrasPessoas.length ? `
+    <div style="position:relative; margin-top:6px;">
+      <input type="text" id="vinculo-busca-${tipo}" class="search-box" style="max-width:100%;" placeholder="${esc(placeholder)}" autocomplete="off">
+      <div id="vinculo-resultados-${tipo}" style="display:none; position:absolute; z-index:5; left:0; right:0; max-height:200px; overflow:auto; background:#fff; border:1px solid var(--border); border-radius:8px; margin-top:4px; box-shadow:0 4px 14px rgba(0,0,0,.08);"></div>
+    </div>` : '<span class="tiny">Cadastre outras pessoas primeiro.</span>'}
+  </div>`;
+}
+
+function renderFormPessoa(){
+  const editing = editingId ? findPerson(editingId) : null;
+  const disp = (editing && editing.disponibilidade) || {};
+  const vinc = (editing && editing.vinculoIds) || [];
+  const naoVinc = (editing && editing.naoVinculoIds) || [];
+  const outrasPessoas = state.people.filter(p=>p.id!==editingId);
+
+  return `
+  <div class="card">
+    <div class="toolbar" style="justify-content:space-between; align-items:center; margin-bottom:2px;">
+      <h2 style="margin:0;">${editing? 'Editar pessoa' : 'Adicionar pessoa'}</h2>
+      ${editing?`<button type="submit" form="form-pessoa">Salvar alterações</button>`:''}
+    </div>
+    <form id="form-pessoa">
+      <div class="grid3">
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" id="f-nome" required value="${esc(editing?editing.nome:'')}">
+        </div>
+        <div class="field">
+          <label>Rede (célula)</label>
+          <input type="text" id="f-rede" value="${esc(editing?editing.rede:'')}" placeholder="Ex: Judá">
+        </div>
+        <div class="field">
+          <label>Ministério</label>
+          <select id="f-ministerio">
+            ${MINISTERIOS.map(m=>`<option value="${m}" ${editing&&editing.ministerio===m?'selected':''}>${m==='Eles'?'Eles (homens)':m==='Elas'?'Elas (mulheres)':'Topo (jovens)'}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid4">
+        <div class="field" id="campo-genero" style="display:${editing&&editing.ministerio==='Topo'?'block':'none'}">
+          <label>Gênero (Topo)</label>
+          <select id="f-genero">
+            <option value="M" ${editing&&editing.genero==='M'?'selected':''}>Homem</option>
+            <option value="F" ${editing&&editing.genero==='F'?'selected':''}>Mulher</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <label class="check-pill ${editing&&editing.supervisor?'checked':''}" style="display:inline-flex">
+            <input type="checkbox" id="f-supervisor" ${editing&&editing.supervisor?'checked':''}> Supervisor(a)
+          </label>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <label class="check-pill ${!editing || editing.ativo!==false?'checked':''}" style="display:inline-flex">
+            <input type="checkbox" id="f-ativo" ${!editing || editing.ativo!==false?'checked':''}> Ativo (entra na escala)
+          </label>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <label class="check-pill ${editing&&editing.podeServir2x?'checked':''}" style="display:inline-flex" title="Permite que a geração automática escale essa pessoa em até 2 cultos no mês, caso seja necessário para fechar alguma vaga. Mais importante marcar para supervisores(as).">
+            <input type="checkbox" id="f-pode2x" ${editing&&editing.podeServir2x?'checked':''}> Pode servir 2x no mês
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Disponibilidade recorrente</label>
+        <div class="checks" id="f-disponibilidade">
+          ${SLOTS.map(s=>`
+            <label class="check-pill ${disp[s.key]?'checked':''}">
+              <input type="checkbox" value="${s.key}" ${disp[s.key]?'checked':''}> ${s.label}
+            </label>`).join('')}
+          <button type="button" id="marcar-todos-dias" class="secondary small">Selecionar todos</button>
+          <button type="button" id="limpar-todos-dias" class="ghost small">Limpar</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        ${campoVinculoHtml('positivo', 'Vínculo (precisa servir junto)', 'Buscar pessoa por nome ou rede para vincular...', vinc, outrasPessoas)}
+        ${campoVinculoHtml('negativo', 'Não pode servir junto (conflito)', 'Buscar pessoa por nome ou rede...', naoVinc, outrasPessoas)}
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Pedidos de data específica (quer servir nesse dia)</label>
+          <div id="pedidos-container">
+            ${(editing&&editing.pedidos||[]).map((pd,i)=>repRowHtml('pedido',i,pd)).join('')}
+          </div>
+          <button type="button" id="add-pedido" class="secondary small">+ Adicionar pedido de data</button>
+        </div>
+        <div class="field">
+          <label>Bloqueios de data (não pode servir nesse dia)</label>
+          <div id="bloqueios-container">
+            ${(editing&&editing.bloqueios||[]).map((bd,i)=>repRowHtml('bloqueio',i,bd)).join('')}
+          </div>
+          <button type="button" id="add-bloqueio" class="secondary small">+ Adicionar bloqueio de data</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observações (referência livre)</label>
+        <textarea id="f-obs" placeholder="Anotações gerais sobre esta pessoa">${esc(editing?editing.observacoes:'')}</textarea>
+      </div>
+
+      <div class="toolbar" style="margin-top:10px;">
+        <button type="submit">${editing?'Salvar alterações':'Adicionar pessoa'}</button>
+        ${editing?'<button type="button" id="cancel-edit" class="ghost">Cancelar</button>':''}
+      </div>
+    </form>
+  </div>`;
+}
+
+function renderTabelaPessoas(){
+  let lista = state.people;
+  if(filtroPessoas==='ativos') lista = lista.filter(ativoDe);
+  if(filtroPessoas==='inativos') lista = lista.filter(p=>!ativoDe(p));
+  if(filtroPessoas==='supervisores') lista = lista.filter(p=>p.supervisor);
+  if(filtroPessoas==='revisar') lista = lista.filter(p=>p.revisar);
+  if(buscaPessoas.trim()){
+    const q = buscaPessoas.trim().toLowerCase();
+    lista = lista.filter(p=> p.nome.toLowerCase().includes(q) || (p.rede||'').toLowerCase().includes(q));
+  }
+  return `
+  <div class="card">
+    <h2>Pessoas cadastradas (${state.people.length})</h2>
+    <div class="toolbar">
+      <button class="filter-btn ${filtroPessoas==='todos'?'active':''}" data-filtro="todos">Todos (${state.people.length})</button>
+      <button class="filter-btn ${filtroPessoas==='ativos'?'active':''}" data-filtro="ativos">Ativos (${state.people.filter(ativoDe).length})</button>
+      <button class="filter-btn ${filtroPessoas==='inativos'?'active':''}" data-filtro="inativos">Inativos (${state.people.filter(p=>!ativoDe(p)).length})</button>
+      <button class="filter-btn ${filtroPessoas==='supervisores'?'active':''}" data-filtro="supervisores">Supervisores (${state.people.filter(p=>p.supervisor).length})</button>
+      <button class="filter-btn ${filtroPessoas==='revisar'?'active':''}" data-filtro="revisar">Pendentes de revisão (${state.people.filter(p=>p.revisar).length})</button>
+      <input type="text" class="search-box" id="busca-pessoas" placeholder="Buscar por nome ou rede..." value="${esc(buscaPessoas)}">
+      <button class="ghost small" id="gerar-pdf-pessoas">Gerar PDF</button>
+    </div>
+    ${lista.length===0? '<div class="empty-state">Nenhuma pessoa encontrada.</div>' : `
+    <table>
+      <thead><tr><th>Nome (rede)</th><th>Categoria</th><th>Status</th><th>Disponibilidade</th><th>Vínculo</th><th>Não pode com</th><th>Obs.</th><th></th></tr></thead>
+      <tbody>
+        ${lista.map(p=>`
+          <tr>
+            <td><strong>${esc(nomeComRede(p))}</strong></td>
+            <td><span class="badge ${categoriaDe(p)}">${CATEGORIA_LABEL[categoriaDe(p)]}</span></td>
+            <td>
+              <span class="badge ${ativoDe(p)?'on':'off'}">${ativoDe(p)?'Ativo':'Inativo'}</span>
+              ${p.revisar?'<span class="badge review">Revisar</span>':''}
+              ${p.podeServir2x?'<span class="badge dupla" title="Pode ser escalada em até 2 cultos no mês">2x</span>':''}
+            </td>
+            <td class="tiny">${SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(s=>s.label).join(', ')||'—'}</td>
+            <td class="tiny">${(p.vinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—'}</td>
+            <td class="tiny">${(p.naoVinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—'}</td>
+            <td class="tiny" style="max-width:220px;">${esc((p.observacoes||'').slice(0,90))}${(p.observacoes||'').length>90?'…':''}</td>
+            <td class="row-actions">
+              <button class="ghost small edit-person" data-id="${p.id}">Editar</button>
+              <button class="danger small delete-person" data-id="${p.id}">Excluir</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`}
+  </div>`;
+}
+function atualizarFormPessoa(){
+  const wrap = document.getElementById('form-pessoa-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = renderFormPessoa();
+  bindFormPessoaEvents();
+}
+function atualizarTabelaPessoas(){
+  const wrap = document.getElementById('tabela-pessoas-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = renderTabelaPessoas();
+  bindTabelaPessoasEvents();
+}
+
+/* Gera um PDF (via impressão do navegador) com a lista de pessoas atualmente filtrada na tela. */
+function gerarPdfPessoas(){
+  let lista = state.people;
+  let filtroTxt = 'Todos';
+  if(filtroPessoas==='ativos'){ lista = lista.filter(ativoDe); filtroTxt = 'Ativos'; }
+  if(filtroPessoas==='inativos'){ lista = lista.filter(p=>!ativoDe(p)); filtroTxt = 'Inativos'; }
+  if(filtroPessoas==='supervisores'){ lista = lista.filter(p=>p.supervisor); filtroTxt = 'Supervisores'; }
+  if(filtroPessoas==='revisar'){ lista = lista.filter(p=>p.revisar); filtroTxt = 'Pendentes de revisão'; }
+  if(buscaPessoas.trim()){
+    const q = buscaPessoas.trim().toLowerCase();
+    lista = lista.filter(p=> p.nome.toLowerCase().includes(q) || (p.rede||'').toLowerCase().includes(q));
+  }
+  const agora = new Date();
+  const linhas = lista.map(p=>`
+    <tr>
+      <td>${esc(nomeComRede(p))}</td>
+      <td>${esc(CATEGORIA_LABEL[categoriaDe(p)])}</td>
+      <td>${ativoDe(p)?'Ativo':'Inativo'}${p.revisar?' (revisar)':''}${p.podeServir2x?' (2x)':''}</td>
+      <td>${esc(SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(s=>s.label).join(', ')||'—')}</td>
+      <td>${esc((p.vinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—')}</td>
+      <td>${esc((p.naoVinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—')}</td>
+    </tr>`).join('');
+  document.getElementById('print-area').innerHTML = `
+    <h1>Equipe de Consolidação — Cadastro de Pessoas</h1>
+    <p class="print-meta">Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR').slice(0,5)} · Filtro: ${filtroTxt}${buscaPessoas.trim()?` · Busca: "${esc(buscaPessoas.trim())}"`:''} · Total: ${lista.length} pessoa(s)</p>
+    <table class="print-table">
+      <thead><tr><th>Nome (rede)</th><th>Categoria</th><th>Status</th><th>Disponibilidade</th><th>Vínculo</th><th>Não pode com</th></tr></thead>
+      <tbody>${linhas || '<tr><td colspan="6">Nenhuma pessoa encontrada.</td></tr>'}</tbody>
+    </table>`;
+  window.print();
+}
+
+/* ==========================================================================
+   ABA: CONFIGURAÇÕES
+   ========================================================================== */
+function renderConfig(){
+  const q = state.config.quotas, h = state.config.horarios;
+  return `
+  <div class="card">
+    <h2>Composição padrão de cada culto</h2>
+    <p class="tiny">Quantas pessoas de cada categoria a geração automática tenta colocar em cada culto. É só uma referência: na tela de Gerar Escala você sempre pode adicionar mais gente manualmente além dessa quantidade, se algum culto precisar.</p>
+    <div class="grid5">
+      ${CATEGORIAS.map(cat=>`
+        <div class="field">
+          <label>${CATEGORIA_LABEL[cat]}</label>
+          <input type="number" min="0" class="cfg-quota" data-cat="${cat}" value="${q[cat]}">
+        </div>`).join('')}
+    </div>
+    <div class="tiny">Total por culto: <strong id="total-quota">${quotaTotal()}</strong> pessoas.</div>
+  </div>
+
+  <div class="card">
+    <h2>Horário dos cultos de semana</h2>
+    <p class="tiny">Domingo já usa os horários fixos (10h, 15h, 17h, 19h). Defina o horário de terça, quarta e quinta para calcular o horário de chegada.</p>
+    <div class="grid3">
+      <div class="field"><label>Terça-feira</label><input type="time" class="cfg-horario" data-dia="terca" value="${h.terca}"></div>
+      <div class="field"><label>Quarta-feira</label><input type="time" class="cfg-horario" data-dia="quarta" value="${h.quarta}"></div>
+      <div class="field"><label>Quinta-feira</label><input type="time" class="cfg-horario" data-dia="quinta" value="${h.quinta}"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Antecedência de chegada</h2>
+    <div class="field" style="max-width:220px;">
+      <label>Minutos antes do início</label>
+      <input type="number" min="0" id="cfg-antecedencia" value="${state.config.minutosAntecedencia}">
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="salvar-config">Salvar configurações</button>
+  </div>
+  `;
+}
+
+/* ==========================================================================
+   ABA: GERAR ESCALA
+   ========================================================================== */
+function renderEscala(){
+  const hoje = new Date();
+  const defaultMes = escalaAtual?.anoMes || `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+
+  let resultadoHtml = '';
+  if(escalaAtual){
+    const cultosPorData = {};
+    escalaAtual.cultos.forEach(c=>{ cultosPorData[c.dataISO]=cultosPorData[c.dataISO]||[]; cultosPorData[c.dataISO].push(c); });
+
+    const cultosSemSupervisor = escalaAtual.cultos.filter(c=>
+      totalCulto(c)>0 && (state.config.quotas.Supervisor||0)>0 && c.assigned.Supervisor.length<(state.config.quotas.Supervisor||0)
+    );
+    const supervisoresEscaladosIds = new Set(escalaAtual.cultos.flatMap(c=>c.assigned.Supervisor));
+    const supervisoresPendentes = state.people.filter(p=>p.supervisor && ativoDe(p) && !supervisoresEscaladosIds.has(p.id));
+
+    const avisos = [];
+    if(cultosSemSupervisor.length) avisos.push(`<div class="banner danger"><strong>⚠️ ${cultosSemSupervisor.length} culto(s) sem supervisor(a):</strong>
+      <ul class="warn-list">${cultosSemSupervisor.map(c=>`<li>${esc(c.label)}</li>`).join('')}</ul></div>`);
+    if(supervisoresPendentes.length) avisos.push(`<div class="banner warn"><strong>👤 ${supervisoresPendentes.length} supervisor(a) ativo(a) ainda não escalado(a) neste mês:</strong>
+      <ul class="warn-list">${supervisoresPendentes.map(p=>`<li><strong>${esc(nomeComRede(p))}</strong>
+        <span class="tiny" style="display:block; margin-top:2px;">Disponibilidade: ${esc(disponibilidadeResumo(p))}${(p.observacoes||'').trim()?' · Obs.: '+esc(p.observacoes.trim()):''}</span></li>`).join('')}</ul></div>`);
+    if(escalaAtual.pendentesRevisaoCount) avisos.push(`<div class="banner info">${escalaAtual.pendentesRevisaoCount} pessoa(s) estão marcadas como "pendente de revisão" e não entram na geração automática até serem revisadas/ativadas na aba Pessoas.</div>`);
+    if(escalaAtual.naoAlocados.length) avisos.push(`<div class="banner danger"><strong>${escalaAtual.naoAlocados.length} pessoa(s)/vínculo(s) não alocados:</strong>
+      <ul class="warn-list">${escalaAtual.naoAlocados.map((n,i)=>{
+        const membrosIds = (n.membros||[]).map(m=>m.id);
+        const cultosCompativeis = cultosCompativeisIgnorandoQuota(membrosIds);
+        const realocarHtml = cultosCompativeis.length ? `<div class="realocar-row">
+            <select class="realocar-select" data-naoalocado-idx="${i}">
+              ${cultosCompativeis.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('')}
+            </select>
+            <button type="button" class="secondary small btn-realocar" data-naoalocado-idx="${i}">Realocar mesmo assim</button>
+          </div>` : `<div class="tiny" style="margin-top:6px; font-style:italic;">Nenhum culto do dia/horário disponível dessa pessoa para realocar.</div>`;
+        return `<li><strong>${esc(n.unidade)}</strong> — ${esc(n.motivo)}
+        ${(n.membros||[]).map(m=>`<span class="tiny" style="display:block; margin-top:2px;">${(n.membros.length>1?esc(m.nome)+' — ':'')}Disponibilidade: ${esc(m.disponibilidade)}${m.observacoes?' · Obs.: '+esc(m.observacoes):''}</span>`).join('')}
+        ${realocarHtml}</li>`;
+      }).join('')}</ul></div>`);
+    if(escalaAtual.conflitos.length) avisos.push(`<div class="banner warn"><strong>${escalaAtual.conflitos.length} conflito(s) de vínculo:</strong>
+      <ul class="warn-list">${escalaAtual.conflitos.map(n=>`<li><strong>${esc(n.unidade)}</strong> — ${esc(n.motivo)}</li>`).join('')}</ul></div>`);
+    if(escalaAtual.shortfalls.length) avisos.push(`<div class="banner warn"><strong>${escalaAtual.shortfalls.length} culto(s) com vagas em aberto:</strong>
+      <ul class="warn-list">${escalaAtual.shortfalls.map(s=>`<li>${esc(s.culto.label)} — falta(m): ${s.faltas.map(f=>`${f.faltam} ${CATEGORIA_LABEL[f.categoria]}`).join(', ')}</li>`).join('')}</ul></div>`);
+    if(!escalaAtual.naoAlocados.length && !escalaAtual.conflitos.length && !escalaAtual.shortfalls.length) avisos.push(`<div class="banner ok">Escala gerada sem pendências: todos alocados e todos os cultos completos.</div>`);
+
+    blocosExportAtuais = gerarBlocosExport();
+    resultadoHtml = `
+      ${avisos.join('')}
+      <div class="card">
+        <h2>Textos para WhatsApp (um envio por bloco)</h2>
+        <p class="tiny">Cada bloco abaixo é um envio separado: os cultos de um domingo formam um bloco, os cultos de terça/quarta/quinta de uma semana formam outro bloco. Copie e cole cada um por vez.</p>
+        ${blocosExportAtuais.length===0 ? '<div class="empty-state">Nenhum culto com pessoas escaladas ainda.</div>' : blocosExportAtuais.map((b,i)=>`
+          <div style="margin-bottom:14px;">
+            <div class="toolbar" style="margin-bottom:6px;">
+              <strong class="tiny">Bloco ${i+1} — ${b.tipo==='domingo'?'Domingo':'Semana (terça/quarta/quinta)'}</strong>
+              <button class="secondary small btn-copiar-bloco" data-idx="${i}">Copiar</button>
+              <button class="secondary small btn-baixar-bloco" data-idx="${i}">Baixar .txt</button>
+            </div>
+            <pre class="export-preview">${esc(b.texto)}</pre>
+          </div>
+        `).join('')}
+        <div class="toolbar">
+          <button id="gerar-pdf-escala" class="secondary">Gerar PDF geral</button>
+          <button id="baixar-tudo-txt" class="ghost">Baixar tudo (.txt)</button>
+          <button id="baixar-csv" class="ghost">Baixar .csv</button>
+        </div>
+      </div>
+      ${Object.keys(cultosPorData).sort().map(dataISO=>`
+        <h3 style="margin-top:16px;">${new Date(dataISO+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'2-digit'})}</h3>
+        ${cultosPorData[dataISO].map(renderCultoCard).join('')}
+      `).join('')}
+    `;
+  }
+
+  return `
+  <div class="card">
+    <h2>Gerar escala do mês</h2>
+    <div class="toolbar" style="align-items:end;">
+      <div class="field" style="max-width:220px; margin-bottom:0;">
+        <label>Mês</label>
+        <input type="month" id="f-mes" value="${defaultMes}">
+      </div>
+      <button id="gerar-btn">Gerar escala</button>
+      ${escalaAtual ? '<button type="button" id="sortear-outra-btn" class="secondary">🎲 Sortear outra combinação</button>' : ''}
+      ${escalaAtual ? '<button type="button" id="gerar-pdf-escala-top" class="secondary">Gerar PDF geral</button>' : ''}
+      <label class="secondary" style="display:inline-flex;align-items:center;padding:8px 15px;border-radius:8px;background:#eceafb;color:var(--accent);cursor:pointer;">
+        Importar escala (.csv ou .txt)
+        <input type="file" id="import-escala" accept=".csv,.txt" style="display:none;">
+      </label>
+    </div>
+    <div class="tiny" style="margin-top:6px;">Cada pessoa é escalada no máximo 1x no mês (2x se estiver marcada como "pode servir 2x" e sobrar alguma vaga, priorizando supervisor(a)). Vínculos são sempre escalados juntos. Se faltar supervisor(a) pra cobrir todos os cultos, a geração tenta espalhar a falta entre domingo e dia de semana, em vez de concentrar tudo num tipo só. Substituições são feitas manualmente nos cartões abaixo.</div>
+    <div class="tiny" style="margin-top:4px;">Importar escala: use o arquivo <strong>.csv</strong> (baixado em "Baixar .csv") pra um resultado exato, ou o <strong>.txt</strong> (baixado em "Baixar tudo (.txt)") — nesse caso as pessoas são reconhecidas pelo nome já cadastrado, então cadastre todo mundo antes de importar o .txt. Isso substitui a escala atual da tela.</div>
+  </div>
+  ${resultadoHtml}
+  `;
+}
+
+function renderCultoCard(culto){
+  const total = totalCulto(culto);
+  const quota = quotaTotal();
+  const escaladosIds = new Set(CATEGORIAS.flatMap(c=>culto.assigned[c]));
+  const escaladosNesteMesIds = new Set(
+    (escalaAtual?.cultos||[]).filter(c=>c.id!==culto.id).flatMap(c=>CATEGORIAS.flatMap(cat=>c.assigned[cat]))
+  );
+  return `
+  <div class="culto-card ${total<quota?'low':''}" data-culto-id="${culto.id}">
+    <div class="culto-header">
+      <span class="titulo">${esc(culto.label)}</span>
+      <span class="count">${total}/${quota} pessoas ${total<quota?'⚠️':''}</span>
+    </div>
+    ${CATEGORIAS.map(cat=>`
+      <div class="cat-group ${cat}">
+        <div class="cat-group-label">${CATEGORIA_LABEL[cat]} (${culto.assigned[cat].length}/${state.config.quotas[cat]||0})${cat==='Supervisor' && culto.assigned[cat].length<(state.config.quotas[cat]||0) ? '<span class="sup-alert">⚠ Sem supervisor(a)</span>' : ''}</div>
+        <div class="pill-list">
+          ${culto.assigned[cat].map(id=>{
+            const pessoa = findPerson(id);
+            const nota = culto.observacoes[id];
+            return `<span class="person-chip">${esc(pessoa?nomeComRede(pessoa):'?')}
+              <button class="btn-nota" data-culto="${culto.id}" data-person="${id}" title="Adicionar nota">📝</button>
+              <button class="btn-rm" data-culto="${culto.id}" data-categoria="${cat}" data-person="${id}">×</button>
+              ${nota?`<span class="chip-nota">(${esc(nota)})</span>`:''}
+            </span>`;
+          }).join('') || '<span class="tiny">—</span>'}
+        </div>
+        <div class="add-person-row">
+          <select class="add-person-select" data-culto="${culto.id}" data-categoria="${cat}">
+            <option value="">+ adicionar ${CATEGORIA_LABEL[cat]}...</option>
+            ${state.people.filter(p=>ativoDe(p) && categoriaDe(p)===cat && !escaladosIds.has(p.id)).map(p=>{
+              const jaEscalado = escaladosNesteMesIds.has(p.id);
+              return `<option value="${p.id}">${esc(nomeComRede(p))}${jaEscalado?' (já escalado(a) neste mês)':''}</option>`;
+            }).join('')}
+          </select>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+/* ==========================================================================
+   ABA: IMPORTAR / EXPORTAR
+   ========================================================================== */
+function renderDados(){
+  return `
+  <div class="banner info">Este app não usa armazenamento do navegador. Para não perder seu cadastro, <strong>exporte o arquivo JSON</strong> ao terminar e <strong>importe-o</strong> na próxima vez que abrir a ferramenta.</div>
+
+  <div class="card">
+    <h2>Salvar / carregar cadastro completo (recomendado)</h2>
+    <div class="toolbar">
+      <button id="export-json">Baixar cadastro (.json)</button>
+      <label class="secondary" style="display:inline-flex;align-items:center;padding:8px 15px;border-radius:8px;background:#eceafb;color:var(--accent);cursor:pointer;">
+        Importar cadastro (.json)
+        <input type="file" id="import-json" accept="application/json" style="display:none;">
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Importar pessoas de uma planilha (.csv)</h2>
+    <p class="tiny">Colunas separadas por ponto e vírgula (;): <code>Nome;Rede;Ministerio;Genero;Supervisor;Ativo;Pode2x;Terca;Quarta;Quinta;Domingo10;Domingo15;Domingo17;Domingo19;Vinculos;NaoVinculos;PedidoData;PedidoDataFim;PedidoHorario;PedidoMotivo;BloqueioData;BloqueioDataFim;BloqueioHorario;BloqueioMotivo;Observacoes</code><br>
+    Ministerio: Eles, Elas ou Topo. Genero (só se Topo): M ou F. Supervisor/Ativo/Pode2x: SIM ou vazio. Pode2x permite que a pessoa seja escalada em até 2 cultos no mês pela geração automática, se necessário. Disponibilidade: SIM ou vazio. PedidoDataFim/BloqueioDataFim são opcionais — preencha só se for um período (de PedidoData/BloqueioData até essa data), deixe em branco pra um dia só.</p>
+    <div class="toolbar">
+      <button id="baixar-template" class="secondary">Baixar modelo .csv</button>
+      <label class="secondary" style="display:inline-flex;align-items:center;padding:8px 15px;border-radius:8px;background:#eceafb;color:var(--accent);cursor:pointer;">
+        Importar .csv
+        <input type="file" id="import-csv" accept=".csv" style="display:none;">
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Zerar cadastro</h2>
+    <p class="tiny">Remove todas as pessoas cadastradas nesta sessão (não afeta arquivos já exportados).</p>
+    <button class="danger" id="limpar-tudo">Apagar tudo</button>
+  </div>
+  `;
+}
+
+/* ==========================================================================
+   CSV
+   ========================================================================== */
+function csvTemplate(){
+  const header = 'Nome;Rede;Ministerio;Genero;Supervisor;Ativo;Pode2x;Terca;Quarta;Quinta;Domingo10;Domingo15;Domingo17;Domingo19;Vinculos;NaoVinculos;PedidoData;PedidoDataFim;PedidoHorario;PedidoMotivo;BloqueioData;BloqueioDataFim;BloqueioHorario;BloqueioMotivo;Observacoes';
+  const exemplo = 'João Silva;Judá;Eles;;;SIM;;SIM;;;SIM;;;;Maria Silva;;;;;;;;;;';
+  return header + '\n' + exemplo + '\n';
+}
+function parseCsv(text){
+  const linhas = text.split(/\r?\n/).filter(l=>l.trim().length);
+  const header = linhas[0].split(';').map(h=>h.trim().toLowerCase());
+  const idx = name => header.indexOf(name);
+  const novos = [];
+  for(let i=1;i<linhas.length;i++){
+    const cols = linhas[i].split(';');
+    const nome = (cols[idx('nome')]||'').trim();
+    if(!nome) continue;
+    const ministerio = (cols[idx('ministerio')]||'Eles').trim();
+    const disponibilidade = {};
+    SLOTS.forEach(s=>{
+      const colName = s.key==='terca'?'terca':s.key==='quarta'?'quarta':s.key==='quinta'?'quinta':
+        s.key==='dom10'?'domingo10':s.key==='dom15'?'domingo15':s.key==='dom17'?'domingo17':'domingo19';
+      const v = (cols[idx(colName)]||'').trim().toUpperCase();
+      disponibilidade[s.key] = v==='SIM'||v==='S'||v==='X'||v==='1'||v==='TRUE';
+    });
+    const vinculosNomes = (cols[idx('vinculos')]||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const naoVinculosNomes = (cols[idx('naovinculos')]||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const sup = (cols[idx('supervisor')]||'').trim().toUpperCase();
+    const ativoCol = (cols[idx('ativo')]||'').trim().toUpperCase();
+    const pode2xCol = (cols[idx('pode2x')]||'').trim().toUpperCase();
+    novos.push({
+      id: uid(), nome, rede: (cols[idx('rede')]||'').trim(),
+      ministerio: MINISTERIOS.includes(ministerio)?ministerio:'Eles',
+      genero: (cols[idx('genero')]||'').trim().toUpperCase()==='F' ? 'F' : 'M',
+      supervisor: ['SIM','S','X','1','TRUE'].includes(sup),
+      ativo: ativoCol ? ['SIM','S','X','1','TRUE'].includes(ativoCol) : true,
+      podeServir2x: ['SIM','S','X','1','TRUE'].includes(pode2xCol),
+      disponibilidade, vinculoIds: [], naoVinculoIds: [], _vinculosNomes: vinculosNomes, _naoVinculosNomes: naoVinculosNomes,
+      pedidos: (cols[idx('pedidodata')]||'').trim() ? [{data:(cols[idx('pedidodata')]||'').trim(), dataFim:(cols[idx('pedidodatafim')]||'').trim()||null, horario:(cols[idx('pedidohorario')]||'').trim()||null, motivo:(cols[idx('pedidomotivo')]||'').trim()}] : [],
+      bloqueios: (cols[idx('bloqueiodata')]||'').trim() ? [{data:(cols[idx('bloqueiodata')]||'').trim(), dataFim:(cols[idx('bloqueiodatafim')]||'').trim()||null, horario:(cols[idx('bloqueiohorario')]||'').trim()||null, motivo:(cols[idx('bloqueiomotivo')]||'').trim()}] : [],
+      observacoes: (cols[idx('observacoes')]||'').trim(),
+      revisar: false,
+    });
+  }
+  function ligar(n, nomeAlvo, campo){
+    const alvoExistente = state.people.find(p=>p.nome.toLowerCase()===nomeAlvo.toLowerCase());
+    const alvoNovo = novos.find(p=>p.nome.toLowerCase()===nomeAlvo.toLowerCase() && p!==n);
+    const alvo = alvoExistente || alvoNovo;
+    if(alvo){
+      n[campo].push(alvo.id);
+      alvo[campo] = alvo[campo]||[];
+      if(!alvo[campo].includes(n.id)) alvo[campo].push(n.id);
+    }
+  }
+  novos.forEach(n=>{
+    n._vinculosNomes.forEach(nomeAlvo=>ligar(n, nomeAlvo, 'vinculoIds'));
+    n._naoVinculosNomes.forEach(nomeAlvo=>ligar(n, nomeAlvo, 'naoVinculoIds'));
+    delete n._vinculosNomes;
+    delete n._naoVinculosNomes;
+  });
+  return novos;
+}
+
+/* ==========================================================================
+   EVENTOS
+   ========================================================================== */
+function bindEvents(){
+  if(currentTab==='pessoas') bindPessoasEvents();
+  if(currentTab==='escala') bindEscalaEvents();
+  if(currentTab==='config') bindConfigEvents();
+  if(currentTab==='dados') bindDadosEvents();
+  if(currentTab==='nuvem') bindNuvemEvents();
+}
+
+function bindPessoasEvents(){
+  bindFormPessoaEvents();
+  bindTabelaPessoasEvents();
+}
+
+/* Snapshot (JSON) do formulário no momento em que ele foi aberto/salvo pela última vez,
+   usado para saber se há alterações reais ainda não salvas. */
+let formPessoaSnapshot = null;
+
+/* Lê os campos do formulário visível e retorna um objeto plano (sem salvar nada). */
+function coletarDadosDoFormulario(){
+  const nomeEl = document.getElementById('f-nome');
+  if(!nomeEl) return null;
+  const nome = nomeEl.value.trim();
+  const rede = document.getElementById('f-rede').value.trim();
+  const ministerio = document.getElementById('f-ministerio').value;
+  const genero = document.getElementById('f-genero') ? document.getElementById('f-genero').value : null;
+  const supervisor = document.getElementById('f-supervisor').checked;
+  const ativo = document.getElementById('f-ativo').checked;
+  const podeServir2x = document.getElementById('f-pode2x').checked;
+  const disponibilidade = {};
+  document.querySelectorAll('#f-disponibilidade input[type=checkbox]').forEach(cb=>{ disponibilidade[cb.value]=cb.checked; });
+  const vinculoIds = [...vinculoSelecionados.positivo].sort();
+  const naoVinculoIds = [...vinculoSelecionados.negativo].sort();
+  const lerRep = (containerId) => Array.from(document.querySelectorAll(`#${containerId} .rep-row`)).map(row=>{
+    let data = row.querySelector('.rep-data').value;
+    let dataFim = row.querySelector('.rep-data-fim').value || null;
+    if(dataFim && data && dataFim < data){ const t = data; data = dataFim; dataFim = t; } // corrige se invertido
+    return {
+      data,
+      dataFim: (dataFim && dataFim!==data) ? dataFim : null,
+      horario: row.querySelector('.rep-horario').value || null,
+      motivo: row.querySelector('.rep-motivo').value,
+    };
+  }).filter(x=>x.data);
+  const pedidos = lerRep('pedidos-container');
+  const bloqueios = lerRep('bloqueios-container');
+  const observacoes = document.getElementById('f-obs').value.trim();
+  return {nome, rede, ministerio, genero: ministerio==='Topo'?genero:null, supervisor, ativo, podeServir2x, disponibilidade, vinculoIds, naoVinculoIds, pedidos, bloqueios, observacoes};
+}
+
+/* Captura o estado atual do formulário como "ponto de referência" (chamar sempre que o formulário for (re)aberto ou salvo). */
+function atualizarSnapshotFormPessoa(){
+  const dados = coletarDadosDoFormulario();
+  formPessoaSnapshot = dados ? JSON.stringify(dados) : null;
+}
+
+/* Detecta se há alterações reais no formulário ainda não salvas. */
+function formPessoaTemConteudo(){
+  const dados = coletarDadosDoFormulario();
+  if(!dados) return false;
+  if(!editingId && !dados.nome) return false; // formulário de "nova pessoa" vazio
+  return JSON.stringify(dados) !== formPessoaSnapshot;
+}
+
+/* Lê o formulário visível e salva (cria ou atualiza) a pessoa no state.
+   Retorna true se salvou, false se a validação falhou (ex: nome vazio). */
+function salvarPessoaDoFormulario(){
+  const dadosComuns = coletarDadosDoFormulario();
+  if(!dadosComuns) return false;
+  if(!dadosComuns.nome){ toast('Informe o nome.'); return false; }
+  dadosComuns.revisar = false;
+  const vinculoIds = dadosComuns.vinculoIds;
+  const naoVinculoIds = dadosComuns.naoVinculoIds;
+
+  function religarBidirecional(pessoaId, idsAntigos, idsNovos, campo){
+    (idsAntigos||[]).forEach(id=>{
+      const outro = findPerson(id);
+      if(outro) outro[campo] = (outro[campo]||[]).filter(x=>x!==pessoaId);
+    });
+    idsNovos.forEach(id=>{
+      const outro = findPerson(id);
+      if(outro){ outro[campo] = outro[campo]||[]; if(!outro[campo].includes(pessoaId)) outro[campo].push(pessoaId); }
+    });
+  }
+
+  if(editingId){
+    const p = findPerson(editingId);
+    religarBidirecional(p.id, p.vinculoIds, vinculoIds, 'vinculoIds');
+    religarBidirecional(p.id, p.naoVinculoIds, naoVinculoIds, 'naoVinculoIds');
+    Object.assign(p, dadosComuns);
+    toast('Pessoa atualizada.');
+    editingId = null;
+  } else {
+    const novo = {id:uid(), ...dadosComuns};
+    state.people.push(novo);
+    religarBidirecional(novo.id, [], vinculoIds, 'vinculoIds');
+    religarBidirecional(novo.id, [], naoVinculoIds, 'naoVinculoIds');
+    toast('Pessoa adicionada.');
+  }
+  return true;
+}
+
+function renderVinculoChipsHtml(tipo){
+  const ids = vinculoSelecionados[tipo];
+  if(!ids.length) return '<span class="tiny">Nenhum selecionado.</span>';
+  return ids.map(id=>{
+    const o = findPerson(id);
+    if(!o) return '';
+    return `<span class="person-chip">${esc(nomeComRede(o))}<button type="button" class="btn-rm" data-id="${id}">×</button></span>`;
+  }).join('');
+}
+function atualizarVinculoChipsDOM(tipo){
+  const wrap = document.getElementById(`vinculo-chips-${tipo}`);
+  if(!wrap) return;
+  wrap.innerHTML = renderVinculoChipsHtml(tipo);
+  wrap.querySelectorAll('.btn-rm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      vinculoSelecionados[tipo] = vinculoSelecionados[tipo].filter(id=>id!==btn.dataset.id);
+      atualizarVinculoChipsDOM(tipo);
+    });
+  });
+}
+function bindVinculoBusca(tipo){
+  const input = document.getElementById(`vinculo-busca-${tipo}`);
+  const resultados = document.getElementById(`vinculo-resultados-${tipo}`);
+  if(!input || !resultados) return;
+
+  function mostrarResultados(){
+    const q = input.value.trim().toLowerCase();
+    if(!q){ resultados.style.display='none'; resultados.innerHTML=''; return; }
+    // não deixa escolher alguém que já está no outro campo de vínculo (não faz sentido precisar servir junto E não poder servir junto com a mesma pessoa)
+    const jaEscolhidos = new Set([...vinculoSelecionados.positivo, ...vinculoSelecionados.negativo]);
+    const candidatos = state.people.filter(p=>
+      p.id!==editingId &&
+      !jaEscolhidos.has(p.id) &&
+      (p.nome.toLowerCase().includes(q) || (p.rede||'').toLowerCase().includes(q))
+    ).slice(0,20);
+    if(!candidatos.length){
+      resultados.innerHTML = '<div class="vinculo-resultado-item tiny">Nenhuma pessoa encontrada.</div>';
+    } else {
+      resultados.innerHTML = candidatos.map(p=>`<div class="vinculo-resultado-item" data-id="${p.id}">${esc(nomeComRede(p))}</div>`).join('');
+    }
+    resultados.style.display = 'block';
+  }
+  input.addEventListener('input', mostrarResultados);
+  input.addEventListener('focus', mostrarResultados);
+  resultados.addEventListener('mousedown', (e)=>{
+    // mousedown (antes do blur do input) para garantir que o clique registre a seleção
+    const item = e.target.closest('.vinculo-resultado-item');
+    if(!item || !item.dataset.id) return;
+    e.preventDefault();
+    vinculoSelecionados[tipo].push(item.dataset.id);
+    atualizarVinculoChipsDOM(tipo);
+    input.value = '';
+    resultados.style.display = 'none';
+    resultados.innerHTML = '';
+  });
+  input.addEventListener('blur', ()=>{
+    setTimeout(()=>{ resultados.style.display='none'; }, 150);
+  });
+}
+
+function bindFormPessoaEvents(){
+  // inicializa as seleções de vínculo (positivo/negativo) a partir do formulário recém-renderizado
+  ['positivo','negativo'].forEach(tipo=>{
+    const wrap = document.getElementById(`vinculo-chips-${tipo}`);
+    vinculoSelecionados[tipo] = wrap && wrap.dataset.ids ? wrap.dataset.ids.split(',').filter(Boolean) : [];
+    atualizarVinculoChipsDOM(tipo);
+    bindVinculoBusca(tipo);
+  });
+  bindVinculoBusca();
+
+  document.querySelectorAll('#f-disponibilidade .check-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=>{
+      setTimeout(()=>{ const input = pill.querySelector('input'); pill.classList.toggle('checked', input.checked); },0);
+    });
+  });
+
+  const ministerioSel = document.getElementById('f-ministerio');
+  if(ministerioSel) ministerioSel.addEventListener('change', ()=>{
+    document.getElementById('campo-genero').style.display = ministerioSel.value==='Topo' ? 'block' : 'none';
+  });
+
+  const marcarTodos = document.getElementById('marcar-todos-dias');
+  if(marcarTodos) marcarTodos.addEventListener('click', ()=>{
+    document.querySelectorAll('#f-disponibilidade input[type=checkbox]').forEach(cb=>{
+      cb.checked = true; cb.closest('.check-pill').classList.add('checked');
+    });
+  });
+  const limparTodos = document.getElementById('limpar-todos-dias');
+  if(limparTodos) limparTodos.addEventListener('click', ()=>{
+    document.querySelectorAll('#f-disponibilidade input[type=checkbox]').forEach(cb=>{
+      cb.checked = false; cb.closest('.check-pill').classList.remove('checked');
+    });
+  });
+
+  function bindRepButtons(){
+    document.querySelectorAll('.rep-remove').forEach(btn=>{
+      btn.onclick = ()=>{ btn.closest('.rep-row').remove(); };
+    });
+    document.querySelectorAll('.rep-usar-semana').forEach(btn=>{
+      btn.onclick = ()=>{
+        const row = btn.closest('.rep-row');
+        const anoMes = row.querySelector('.rep-mes-ref').value;
+        const semanaNum = Number(row.querySelector('.rep-semana-num').value);
+        if(!anoMes){ toast('Selecione o mês de referência antes de usar a semana.'); return; }
+        const datas = semanaParaDatas(anoMes, semanaNum);
+        if(!datas){ toast('Esse mês não tem essa semana.'); return; }
+        row.querySelector('.rep-data').value = datas.inicio;
+        row.querySelector('.rep-data-fim').value = datas.fim;
+      };
+    });
+  }
+  bindRepButtons();
+  const addPedidoBtn = document.getElementById('add-pedido');
+  if(addPedidoBtn) addPedidoBtn.addEventListener('click', ()=>{
+    const container = document.getElementById('pedidos-container');
+    const idx = container.querySelectorAll('.rep-row').length;
+    container.insertAdjacentHTML('beforeend', repRowHtml('pedido', idx, {data:'',horario:'',motivo:''}));
+    bindRepButtons();
+  });
+  const addBloqueioBtn = document.getElementById('add-bloqueio');
+  if(addBloqueioBtn) addBloqueioBtn.addEventListener('click', ()=>{
+    const container = document.getElementById('bloqueios-container');
+    const idx = container.querySelectorAll('.rep-row').length;
+    container.insertAdjacentHTML('beforeend', repRowHtml('bloqueio', idx, {data:'',horario:'',motivo:''}));
+    bindRepButtons();
+  });
+
+  const cancelBtn = document.getElementById('cancel-edit');
+  if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingId=null; atualizarFormPessoa(); });
+
+  const form = document.getElementById('form-pessoa');
+  if(form) form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if(!salvarPessoaDoFormulario()) return;
+    atualizarFormPessoa();
+    atualizarTabelaPessoas();
+    agendarSincronizacaoNuvem();
+  });
+
+  // Marca o estado atual do formulário como "referência salva" — qualquer alteração a partir
+  // daqui é que conta como pendente. Deve ser a última coisa feita ao (re)montar o formulário.
+  atualizarSnapshotFormPessoa();
+}
+
+function bindTabelaPessoasEvents(){
+  document.querySelectorAll('.edit-person').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const trocarPara = () => {
+        editingId = btn.dataset.id;
+        atualizarFormPessoa();
+        window.scrollTo({top:0, behavior:'smooth'});
+      };
+      if(formPessoaTemConteudo() && editingId!==btn.dataset.id){
+        const nomeAtual = editingId ? findPerson(editingId).nome : (document.getElementById('f-nome').value.trim() || 'nova pessoa');
+        const salvar = confirm(`Você tem alterações não salvas em "${nomeAtual}". Clique OK para salvar antes de abrir outra pessoa, ou Cancelar para descartar essas alterações.`);
+        if(salvar){
+          if(!salvarPessoaDoFormulario()) return; // validação falhou, deixa o usuário corrigir
+          atualizarTabelaPessoas();
+          agendarSincronizacaoNuvem();
+        } else {
+          editingId = null;
+        }
+      }
+      trocarPara();
+    });
+  });
+  document.querySelectorAll('.delete-person').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = findPerson(btn.dataset.id);
+      if(!confirm(`Excluir "${p.nome}" do cadastro?`)) return;
+      state.people = state.people.filter(x=>x.id!==btn.dataset.id);
+      state.people.forEach(x=>{
+        x.vinculoIds = (x.vinculoIds||[]).filter(id=>id!==btn.dataset.id);
+        x.naoVinculoIds = (x.naoVinculoIds||[]).filter(id=>id!==btn.dataset.id);
+      });
+      if(editingId===btn.dataset.id){ editingId=null; atualizarFormPessoa(); }
+      atualizarTabelaPessoas();
+      agendarSincronizacaoNuvem();
+      toast('Pessoa excluída.');
+    });
+  });
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ filtroPessoas = btn.dataset.filtro; atualizarTabelaPessoas(); });
+  });
+  const busca = document.getElementById('busca-pessoas');
+  if(busca){
+    busca.addEventListener('input', ()=>{ buscaPessoas = busca.value; });
+    busca.addEventListener('change', ()=>{ buscaPessoas = busca.value; atualizarTabelaPessoas(); });
+    busca.addEventListener('keyup', (e)=>{ if(e.key==='Enter'){ buscaPessoas = busca.value; atualizarTabelaPessoas(); } });
+  }
+  const pdfPessoasBtn = document.getElementById('gerar-pdf-pessoas');
+  if(pdfPessoasBtn) pdfPessoasBtn.addEventListener('click', gerarPdfPessoas);
+}
+
+function bindConfigEvents(){
+  document.querySelectorAll('.cfg-quota').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const total = CATEGORIAS.reduce((s,cat)=>{
+        const el = document.querySelector(`.cfg-quota[data-cat="${cat}"]`);
+        return s + (parseInt(el.value)||0);
+      },0);
+      document.getElementById('total-quota').textContent = total;
+    });
+  });
+  document.getElementById('salvar-config').addEventListener('click', ()=>{
+    document.querySelectorAll('.cfg-quota').forEach(inp=>{ state.config.quotas[inp.dataset.cat] = parseInt(inp.value)||0; });
+    document.querySelectorAll('.cfg-horario').forEach(inp=>{ state.config.horarios[inp.dataset.dia] = inp.value; });
+    state.config.minutosAntecedencia = parseInt(document.getElementById('cfg-antecedencia').value)||0;
+    toast('Configurações salvas.');
+    render();
+  });
+}
+
+function bindEscalaEvents(){
+  document.getElementById('gerar-btn').addEventListener('click', ()=>{
+    const mes = document.getElementById('f-mes').value;
+    if(!mes){ toast('Selecione um mês.'); return; }
+    if(state.people.length===0){ toast('Cadastre pessoas primeiro.'); return; }
+    escalaAtual = gerarEscala(mes);
+    render();
+    toast('Escala gerada.');
+  });
+
+  const sortearBtn = document.getElementById('sortear-outra-btn');
+  if(sortearBtn) sortearBtn.addEventListener('click', ()=>{
+    const mes = document.getElementById('f-mes').value || escalaAtual.anoMes;
+    if(!confirm('Isso vai sortear outra combinação e substituir a escala atual, incluindo qualquer ajuste manual feito nos cultos. Continuar?')) return;
+    escalaAtual = gerarEscala(mes);
+    render();
+    toast('Nova combinação sorteada.');
+  });
+
+  document.querySelectorAll('.btn-rm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const culto = escalaAtual.cultos.find(c=>c.id===btn.dataset.culto);
+      const cat = btn.dataset.categoria;
+      culto.assigned[cat] = culto.assigned[cat].filter(id=>id!==btn.dataset.person);
+      delete culto.observacoes[btn.dataset.person];
+      recalcularAvisos();
+      render();
+    });
+  });
+  document.querySelectorAll('.btn-nota').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const culto = escalaAtual.cultos.find(c=>c.id===btn.dataset.culto);
+      const atual = culto.observacoes[btn.dataset.person] || '';
+      const nota = prompt('Nota para esta pessoa neste culto (ex: troca com Fulano):', atual);
+      if(nota===null) return;
+      if(nota.trim()) culto.observacoes[btn.dataset.person] = nota.trim();
+      else delete culto.observacoes[btn.dataset.person];
+      render();
+    });
+  });
+
+  document.querySelectorAll('.add-person-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      if(!sel.value) return;
+      const culto = escalaAtual.cultos.find(c=>c.id===sel.dataset.culto);
+      const cat = sel.dataset.categoria;
+      const pessoa = findPerson(sel.value);
+      const idsNoCulto = CATEGORIAS.flatMap(c=>culto.assigned[c]);
+      const conflito = idsNoCulto.find(id=>{
+        if((pessoa.naoVinculoIds||[]).includes(id)) return true;
+        const outro = findPerson(id);
+        return outro && (outro.naoVinculoIds||[]).includes(pessoa.id);
+      });
+      // A quota é apenas a composição padrão/referência: pode-se acrescentar mais gente manualmente quando precisar.
+      const acimaDaQuota = culto.assigned[cat].length >= (state.config.quotas[cat]||0);
+      culto.assigned[cat].push(sel.value);
+      recalcularAvisos();
+      render();
+      if(conflito) toast(`⚠️ Atenção: ${nomeComRede(pessoa)} está marcado(a) como "não pode servir junto" com ${nomeComRede(findPerson(conflito))}, que já está nesse culto.`);
+      else if(acimaDaQuota) toast(`Adicionado(a) além da quantidade padrão de ${CATEGORIA_LABEL[cat]} — tudo bem, é só uma referência.`);
+    });
+  });
+
+  document.querySelectorAll('.btn-realocar').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.naoalocadoIdx);
+      const entry = escalaAtual.naoAlocados[idx];
+      if(!entry) return;
+      const sel = document.querySelector(`.realocar-select[data-naoalocado-idx="${idx}"]`);
+      if(!sel || !sel.value){ toast('Selecione um culto para realocar.'); return; }
+      const culto = escalaAtual.cultos.find(c=>c.id===sel.value);
+      if(!culto) return;
+      const pessoas = (entry.membros||[]).map(m=>findPerson(m.id)).filter(Boolean);
+      if(!pessoas.length) return;
+      let houveConflito = false;
+      pessoas.forEach(pessoa=>{
+        const idsNoCulto = CATEGORIAS.flatMap(c=>culto.assigned[c]);
+        const conflito = idsNoCulto.find(id=>{
+          if((pessoa.naoVinculoIds||[]).includes(id)) return true;
+          const outro = findPerson(id);
+          return outro && (outro.naoVinculoIds||[]).includes(pessoa.id);
+        });
+        if(conflito) houveConflito = true;
+        const cat = categoriaDe(pessoa);
+        if(!culto.assigned[cat].includes(pessoa.id)) culto.assigned[cat].push(pessoa.id);
+      });
+      recalcularAvisos();
+      render();
+      if(houveConflito) toast(`⚠️ Realocado(a) para ${culto.label}, além da quantidade padrão — atenção: há conflito de "não pode servir junto" nesse culto.`);
+      else toast(`Realocado(a) para ${culto.label}, além da quantidade padrão da categoria — tudo bem, é só uma referência.`);
+    });
+  });
+
+  document.querySelectorAll('.btn-copiar-bloco').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const bloco = blocosExportAtuais[Number(btn.dataset.idx)];
+      navigator.clipboard.writeText(bloco.texto).then(()=>toast('Bloco copiado! Cole no WhatsApp.')).catch(()=>toast('Não foi possível copiar automaticamente. Use "Baixar .txt".'));
+    });
+  });
+  document.querySelectorAll('.btn-baixar-bloco').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.idx);
+      const bloco = blocosExportAtuais[idx];
+      baixarArquivo(`escala_${escalaAtual.anoMes}_bloco${idx+1}_${bloco.tipo}.txt`, bloco.texto);
+    });
+  });
+  const baixarTudoBtn = document.getElementById('baixar-tudo-txt');
+  if(baixarTudoBtn) baixarTudoBtn.addEventListener('click', ()=>{
+    const tudo = blocosExportAtuais.map(b=>b.texto).join('\n\n');
+    baixarArquivo(`escala_${escalaAtual.anoMes}_completa.txt`, tudo);
+  });
+  const pdfEscalaBtn = document.getElementById('gerar-pdf-escala');
+  if(pdfEscalaBtn) pdfEscalaBtn.addEventListener('click', gerarPdfEscala);
+  const pdfEscalaBtnTop = document.getElementById('gerar-pdf-escala-top');
+  if(pdfEscalaBtnTop) pdfEscalaBtnTop.addEventListener('click', gerarPdfEscala);
+  const baixarCsvBtn = document.getElementById('baixar-csv');
+  if(baixarCsvBtn) baixarCsvBtn.addEventListener('click', ()=>{ baixarArquivo(`escala_${escalaAtual.anoMes}.csv`, escalaParaCsv()); });
+
+  const importEscalaInput = document.getElementById('import-escala');
+  if(importEscalaInput) importEscalaInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(escalaAtual && !confirm('Isso vai substituir a escala atual da tela pela escala do arquivo importado. Continuar?')){
+      importEscalaInput.value = '';
+      return;
+    }
+    const ehTxt = /\.txt$/i.test(file.name);
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const resultado = ehTxt ? importarEscalaDeTxt(reader.result) : importarEscalaDeCsv(reader.result);
+        escalaAtual = { anoMes: resultado.anoMes, cultos: resultado.cultos, naoAlocados: [], conflitos: [], shortfalls: [], pendentesRevisaoCount: state.people.filter(p=>p.revisar).length };
+        recalcularAvisos();
+        render();
+        toast(`Escala importada: ${resultado.matched} pessoa(s) alocada(s)${resultado.naoReconhecidos.length ? `, ${resultado.naoReconhecidos.length} não reconhecida(s)` : ''}.`);
+        if(resultado.naoReconhecidos.length) alert(`A escala foi importada, mas ${resultado.naoReconhecidos.length} linha(s) não foram reconhecidas e precisam ser conferidas/adicionadas manualmente:\n\n${resultado.naoReconhecidos.join('\n')}`);
+      }catch(err){
+        toast('Não foi possível importar o arquivo: ' + err.message);
+      }
+      importEscalaInput.value = '';
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function recalcularAvisos(){
+  const todosEscaladosIds = new Set(escalaAtual.cultos.flatMap(c=>CATEGORIAS.flatMap(cat=>c.assigned[cat])));
+  const unidades = getUnidades(true);
+  escalaAtual.naoAlocados = unidades
+    .filter(u=>!u.some(id=>todosEscaladosIds.has(id)))
+    .map(u=>{
+      const pessoas = u.map(id=>findPerson(id)).filter(Boolean);
+      return {
+        unidade: pessoas.map(p=>nomeComRede(p)).join(' + '),
+        motivo: 'Ainda não alocado nesta escala.',
+        membros: pessoas.map(p=>({id:p.id, nome:nomeComRede(p), disponibilidade:disponibilidadeResumo(p), observacoes:(p.observacoes||'').trim()}))
+      };
+    });
+  escalaAtual.shortfalls = escalaAtual.cultos.map(c=>{
+    const faltas = CATEGORIAS.filter(cat => c.assigned[cat].length < (state.config.quotas[cat]||0))
+      .map(cat => ({categoria:cat, faltam:(state.config.quotas[cat]||0)-c.assigned[cat].length}));
+    return {culto:c, faltas};
+  }).filter(x=>x.faltas.length);
+}
+
+/* ---- Exportação em texto (formato WhatsApp) ---- */
+function formatarDataCurta(dataISO){
+  const [ano,mes,dia] = dataISO.split('-');
+  return `${dia}/${mes}/${ano.slice(2)}`;
+}
+function subtrairMinutos(hhmm, minutos){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  let total = h*60+m-minutos;
+  if(total<0) total += 24*60;
+  const hh = Math.floor(total/60)%24, mm = total%60;
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+function cabecalhoCulto(culto){
+  const slot = SLOT_MAP[culto.slot];
+  const dataCurta = formatarDataCurta(culto.dataISO);
+  const hora = culto.horaCulto || '';
+  const chegada = subtrairMinutos(hora, state.config.minutosAntecedencia||0);
+  const horaFmt = hora ? hora+'h' : '';
+  return `${slot.labelCurta} ${dataCurta} | ${horaFmt} – CHEGAR ÀS ${chegada}h`;
+}
+const MESES_PT = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+function nomeMesExtenso(anoMes){
+  const [, mes] = anoMes.split('-').map(Number);
+  return MESES_PT[mes-1];
+}
+function textoCulto(culto){
+  let out = `*${cabecalhoCulto(culto)}*\n`;
+  let n = 1;
+  CATEGORIAS.forEach(cat=>{
+    culto.assigned[cat].forEach(id=>{
+      const p = findPerson(id);
+      if(!p) return;
+      const nota = culto.observacoes[id];
+      const linha = `${n}. ${p.nome.toUpperCase()}${p.rede?` (${p.rede.toUpperCase()})`:''}${cat==='Supervisor'?' – SUPERVISOR(A)':''}${nota?` (${nota})`:''}`;
+      out += (cat==='Supervisor' ? `*${linha}*` : linha) + '\n';
+      n++;
+    });
+  });
+  return out;
+}
+/* Agrupa os cultos com gente escalada em blocos de envio separados:
+   um bloco por domingo (com seus horários) e um bloco por semana (terça+quarta+quinta) */
+function gerarBlocosExport(){
+  const titulo = `*ESCALA CONSOLIDAÇÃO | ${nomeMesExtenso(escalaAtual.anoMes)}*`;
+  const gruposBrutos = [];
+  let atual = null;
+  escalaAtual.cultos.forEach(c=>{
+    if(totalCulto(c)===0) return;
+    const tipo = SLOT_MAP[c.slot].weekday===0 ? 'domingo' : 'semana';
+    if(!atual || atual.tipo!==tipo){
+      atual = {tipo, cultos:[]};
+      gruposBrutos.push(atual);
+    }
+    atual.cultos.push(c);
+  });
+  return gruposBrutos.map(grupo=>{
+    let texto = `${titulo}\n\n`;
+    grupo.cultos.forEach(c=>{ texto += textoCulto(c) + '\n'; });
+    return {tipo: grupo.tipo, texto: texto.trim()+'\n'};
+  });
+}
+
+/* Gera um PDF (via impressão do navegador) com a escala do mês inteira, todos os cultos juntos. */
+function gerarPdfEscala(){
+  if(!escalaAtual) return;
+  const cultosComGente = escalaAtual.cultos.filter(c=>totalCulto(c)>0);
+  const blocosHtml = cultosComGente.map(c=>{
+    let itens = '';
+    let n = 1;
+    CATEGORIAS.forEach(cat=>{
+      c.assigned[cat].forEach(id=>{
+        const p = findPerson(id);
+        if(!p) return;
+        const nota = c.observacoes[id];
+        itens += `<li${cat==='Supervisor'?' class="sup"':''}>${n}. ${esc(p.nome.toUpperCase())}${p.rede?` (${esc(p.rede.toUpperCase())})`:''}${cat==='Supervisor'?' – SUPERVISOR(A)':''}${nota?` (${esc(nota)})`:''}</li>`;
+        n++;
+      });
+    });
+    return `<div class="print-culto"><h2>${esc(cabecalhoCulto(c))}</h2><ol>${itens}</ol></div>`;
+  }).join('');
+  document.getElementById('print-area').innerHTML = `
+    <h1>ESCALA CONSOLIDAÇÃO | ${esc(nomeMesExtenso(escalaAtual.anoMes))}</h1>
+    <p class="print-meta">${cultosComGente.length} culto(s) com pessoas escaladas · Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+    ${blocosHtml || '<p>Nenhum culto com pessoas escaladas ainda.</p>'}`;
+  window.print();
+}
+function escalaParaCsv(){
+  let out = 'Data;Culto;Categoria;Pessoa;Rede;Nota\n';
+  escalaAtual.cultos.forEach(c=>{
+    CATEGORIAS.forEach(cat=>{
+      c.assigned[cat].forEach(id=>{
+        const p = findPerson(id);
+        out += `${c.dataISO};${c.label};${CATEGORIA_LABEL[cat]};${p?p.nome:''};${p?p.rede:''};${c.observacoes[id]||''}\n`;
+      });
+      if(c.assigned[cat].length===0) out += `${c.dataISO};${c.label};${CATEGORIA_LABEL[cat]};;;\n`;
+    });
+  });
+  return out;
+}
+/* ==========================================================================
+   IMPORTAÇÃO DA ESCALA (a partir do .csv ou do .txt exportados por este app)
+   ========================================================================== */
+const CATEGORIA_LABEL_REVERSO = Object.fromEntries(Object.entries(CATEGORIA_LABEL).map(([k,v])=>[v,k]));
+
+/* Acha a pessoa cadastrada cujo nome bate com "nome" (e, se houver ambiguidade, desempata por rede/categoria). */
+function matchPessoaPorNome(nome, rede, categoriaEsperada){
+  const alvo = (nome||'').trim().toUpperCase();
+  if(!alvo) return null;
+  let candidatos = state.people.filter(p=>p.nome.trim().toUpperCase()===alvo);
+  if(candidatos.length>1 && rede) candidatos = candidatos.filter(p=>(p.rede||'').trim().toUpperCase()===rede.trim().toUpperCase());
+  if(candidatos.length>1 && categoriaEsperada) candidatos = candidatos.filter(p=>categoriaDe(p)===categoriaEsperada);
+  return candidatos.length===1 ? candidatos[0] : null;
+}
+
+/* Importa a partir do .csv gerado por "Baixar .csv" (Data;Culto;Categoria;Pessoa;Rede;Nota) — o mais preciso,
+   porque cada linha já diz exatamente a data, o culto e a categoria. */
+function importarEscalaDeCsv(texto){
+  const linhas = texto.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!linhas.length) throw new Error('Arquivo vazio.');
+  const header = linhas[0].split(';').map(h=>h.trim().toLowerCase());
+  const idx = nome => header.indexOf(nome);
+  if(idx('data')===-1 || idx('categoria')===-1) throw new Error('Cabeçalho do .csv não reconhecido — use o arquivo baixado em "Baixar .csv".');
+
+  let anoMes = null;
+  const linhasParsed = [];
+  for(let i=1;i<linhas.length;i++){
+    const cols = linhas[i].split(';');
+    const dataISO = (cols[idx('data')]||'').trim();
+    if(!dataISO) continue;
+    if(!anoMes) anoMes = dataISO.slice(0,7);
+    linhasParsed.push({
+      dataISO, label: (cols[idx('culto')]||'').trim(),
+      categoriaLabel: (cols[idx('categoria')]||'').trim(),
+      nomePessoa: (cols[idx('pessoa')]||'').trim(),
+      rede: (cols[idx('rede')]||'').trim(),
+      nota: (cols[idx('nota')]||'').trim(),
+    });
+  }
+  if(!anoMes) throw new Error('Nenhuma linha com data válida encontrada no .csv.');
+
+  const cultos = gerarCultosDoMes(anoMes);
+  const porChave = {};
+  cultos.forEach(c=>{ porChave[`${c.dataISO}|${c.label}`] = c; });
+
+  let matched = 0;
+  const naoReconhecidos = [];
+  linhasParsed.forEach(l=>{
+    if(!l.nomePessoa) return; // linha "placeholder" de categoria vazia nesse culto
+    const culto = porChave[`${l.dataISO}|${l.label}`] || cultos.find(c=>c.dataISO===l.dataISO);
+    if(!culto){ naoReconhecidos.push(`Culto não encontrado para ${l.dataISO} (${l.label})`); return; }
+    const cat = CATEGORIA_LABEL_REVERSO[l.categoriaLabel];
+    if(!cat){ naoReconhecidos.push(`Categoria "${l.categoriaLabel}" não reconhecida (${l.nomePessoa})`); return; }
+    const pessoa = matchPessoaPorNome(l.nomePessoa, l.rede, cat);
+    if(!pessoa){ naoReconhecidos.push(`${l.nomePessoa}${l.rede?` (${l.rede})`:''} — não encontrado(a) no cadastro`); return; }
+    if(!culto.assigned[cat].includes(pessoa.id)) culto.assigned[cat].push(pessoa.id);
+    if(l.nota) culto.observacoes[pessoa.id] = l.nota;
+    matched++;
+  });
+  return { anoMes, cultos, matched, naoReconhecidos };
+}
+
+/* Importa a partir do .txt no formato de WhatsApp gerado por "Baixar tudo (.txt)". Reconhece cada pessoa pelo
+   nome já cadastrado (por isso é essencial cadastrar todo mundo antes de importar um .txt) — a categoria de
+   cada uma é a categoria atual dela no cadastro (Eles/Elas/Topo/Supervisor(a)), não algo escrito no arquivo. */
+function importarEscalaDeTxt(texto){
+  const linhasRaw = texto.split(/\r?\n/);
+  let anoMes = null;
+  let cultoAtual = null;
+  const atribuicoes = [];
+
+  linhasRaw.forEach(raw=>{
+    const linha = raw.trim();
+    if(!linha) return;
+    const semAsteriscos = (linha.startsWith('*') && linha.endsWith('*') && linha.length>1) ? linha.slice(1,-1) : linha;
+    const ehLinhaPessoa = /^\d+\.\s/.test(semAsteriscos);
+    const mHeader = !ehLinhaPessoa && semAsteriscos.match(/(\d{2})\/(\d{2})\/(\d{2})\s*\|\s*(\d{2}:\d{2})h/);
+    if(mHeader){
+      const [, dd, mm, yy, hora] = mHeader;
+      const dataISO = `20${yy}-${mm}-${dd}`;
+      if(!anoMes) anoMes = dataISO.slice(0,7);
+      cultoAtual = { dataISO, hora };
+      return;
+    }
+    if(!cultoAtual) return; // linha de título geral, antes do 1º culto reconhecido
+    const mPessoa = semAsteriscos.match(/^\d+\.\s*(.+)$/);
+    if(!mPessoa) return;
+    const resto = mPessoa[1];
+    const restoUpper = resto.toUpperCase();
+
+    // Acha o(s) candidato(s) cujo nome é prefixo de "resto" (com fronteira exata: fim da linha, " (" ou " –").
+    // Entre nomes de tamanho igual (nomes duplicados no cadastro, ex.: duas "SIMONE"), desempata pela rede,
+    // já que o texto exportado sempre traz "(REDE)" logo depois do nome.
+    let candidatosNome = [];
+    let melhorLen = -1;
+    state.people.forEach(p=>{
+      const nomeUpper = p.nome.trim().toUpperCase();
+      if(!nomeUpper) return;
+      const bate = restoUpper===nomeUpper || restoUpper.startsWith(nomeUpper+' (') || restoUpper.startsWith(nomeUpper+' –');
+      if(!bate) return;
+      if(nomeUpper.length>melhorLen){ melhorLen = nomeUpper.length; candidatosNome = [{pessoa:p, nomeUpper}]; }
+      else if(nomeUpper.length===melhorLen){ candidatosNome.push({pessoa:p, nomeUpper}); }
+    });
+    let melhor = null;
+    if(candidatosNome.length===1){
+      melhor = candidatosNome[0];
+    } else if(candidatosNome.length>1){
+      const comRedeBatendo = candidatosNome.filter(c=>{
+        const sobraTeste = restoUpper.slice(c.nomeUpper.length).trim();
+        return c.pessoa.rede && sobraTeste.startsWith(`(${c.pessoa.rede.trim().toUpperCase()})`);
+      });
+      if(comRedeBatendo.length===1) melhor = comRedeBatendo[0];
+    }
+    if(!melhor){
+      atribuicoes.push({ dataISO: cultoAtual.dataISO, hora: cultoAtual.hora, nomePessoa: resto, naoEncontrada:true });
+      return;
+    }
+    let sobra = resto.slice(melhor.nomeUpper.length).trim();
+    const pessoa = melhor.pessoa;
+    if(pessoa.rede && sobra.toUpperCase().startsWith(`(${pessoa.rede.trim().toUpperCase()})`)){
+      sobra = sobra.slice(pessoa.rede.trim().length+2).trim();
+    }
+    let supervisorMarcado = false;
+    if(sobra.startsWith('– SUPERVISOR(A)')){
+      supervisorMarcado = true;
+      sobra = sobra.slice('– SUPERVISOR(A)'.length).trim();
+    }
+    let nota = '';
+    const mNota = sobra.match(/^\(([\s\S]*)\)$/);
+    if(mNota) nota = mNota[1].trim();
+    atribuicoes.push({ dataISO: cultoAtual.dataISO, hora: cultoAtual.hora, pessoaId: pessoa.id, nota, supervisorMarcado });
+  });
+
+  if(!anoMes) throw new Error('Nenhum culto reconhecido no arquivo — use o arquivo baixado em "Baixar tudo (.txt)".');
+
+  const cultos = gerarCultosDoMes(anoMes);
+  let matched = 0;
+  const naoReconhecidos = [];
+  atribuicoes.forEach(a=>{
+    const culto = cultos.find(c=>c.dataISO===a.dataISO && c.horaCulto===a.hora) || cultos.find(c=>c.dataISO===a.dataISO);
+    if(!culto){ naoReconhecidos.push(`Culto não encontrado em ${a.dataISO}${a.hora?' '+a.hora+'h':''}`); return; }
+    if(a.naoEncontrada){ naoReconhecidos.push(`"${a.nomePessoa}" — não encontrado(a) no cadastro (confira o nome)`); return; }
+    const pessoa = findPerson(a.pessoaId);
+    const cat = a.supervisorMarcado ? 'Supervisor' : categoriaDe(pessoa);
+    if(!culto.assigned[cat].includes(pessoa.id)) culto.assigned[cat].push(pessoa.id);
+    if(a.nota) culto.observacoes[pessoa.id] = a.nota;
+    matched++;
+  });
+  return { anoMes, cultos, matched, naoReconhecidos };
+}
+
+function baixarArquivo(nome, conteudo){
+  const blob = new Blob([conteudo], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function bindDadosEvents(){
+  document.getElementById('export-json').addEventListener('click', ()=>{
+    baixarArquivo('cadastro_escala.json', JSON.stringify(state, null, 2));
+    toast('Cadastro exportado.');
+  });
+  document.getElementById('import-json').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const novo = JSON.parse(reader.result);
+        if(!novo.people) throw new Error('formato inválido');
+        state = { people: novo.people, config: Object.assign(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), novo.config||{}) };
+        editingId = null;
+        toast(`Cadastro importado: ${state.people.length} pessoa(s).`);
+        switchTab('pessoas');
+      }catch(err){ toast('Arquivo JSON inválido.'); }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('baixar-template').addEventListener('click', ()=>{ baixarArquivo('modelo_pessoas.csv', csvTemplate()); });
+  document.getElementById('import-csv').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const novos = parseCsv(reader.result);
+        state.people = state.people.concat(novos);
+        toast(`${novos.length} pessoa(s) importada(s) do CSV.`);
+        switchTab('pessoas');
+      }catch(err){ toast('Não foi possível ler o CSV. Confira o modelo.'); }
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  document.getElementById('limpar-tudo').addEventListener('click', ()=>{
+    if(!confirm('Tem certeza que deseja apagar todas as pessoas cadastradas?')) return;
+    state = { people:[], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+    escalaAtual = null;
+    toast('Cadastro apagado.');
+    render();
+  });
+}
+
+/* ==========================================================================
+   NUVEM (Firebase — opcional): sincroniza cadastro + escala com um projeto Firebase
+   próprio do usuário, pra não depender só de export/import manual de arquivo e
+   poder acessar/editar de outros aparelhos. Sem configurar nada aqui, o app
+   continua 100% funcional só localmente, como sempre foi.
+
+   Se você hospedou este arquivo (GitHub Pages, Firebase Hosting etc.) e quer que
+   ele já abra com a nuvem pronta em qualquer computador, sem precisar colar a
+   configuração manualmente em cada um, preencha o objeto abaixo com o
+   "firebaseConfig" do seu projeto (o mesmo bloco copiado em "Seus apps" no
+   console do Firebase). Isso NÃO é informação secreta — é normal e seguro deixar
+   esses dados direto no código de um app web; quem protege de verdade os dados
+   são as regras de segurança do Firestore e o login por e-mail/senha, não isso
+   aqui. Deixe como "null" pra manter o comportamento antigo (pede pra colar a
+   configuração na aba Nuvem, uma vez por navegador).
+   ========================================================================== */
+const NUVEM_CONFIG_EMBUTIDA = {
+  apiKey: "AIzaSyDfHkBcrWrB22o7DOd6caJZ5gnnZxdDFJI",
+  authDomain: "escala-consolidacao.firebaseapp.com",
+  projectId: "escala-consolidacao",
+  storageBucket: "escala-consolidacao.firebasestorage.app",
+  messagingSenderId: "652892372041",
+  appId: "1:652892372041:web:10b928ab2006e7f3bb398"
+};
+let nuvemConfig = null;
+let nuvemAuth = null, nuvemDb = null;
+let nuvemUser = null;
+let nuvemErro = '';
+let nuvemCarregandoAuth = false;
+let nuvemUltimaSincronizacao = null;
+let nuvemSincronizando = false;
+let nuvemAplicandoRemoto = false;
+let nuvemUnsubscribe = null;
+let nuvemSalvarTimeout = null;
+let nuvemUltimoPayloadEnviado = null;
+function nuvemDocRef(){ return nuvemDb.collection('escalaConsolidacao').doc('dados'); }
+
+function traduzErroFirebase(err){
+  const c = (err && err.code) || '';
+  const mapa = {
+    'auth/wrong-password':'Senha incorreta.',
+    'auth/invalid-credential':'E-mail ou senha incorretos.',
+    'auth/user-not-found':'Não existe conta com esse e-mail — use "Criar minha conta".',
+    'auth/email-already-in-use':'Já existe uma conta com esse e-mail — use "Entrar".',
+    'auth/weak-password':'Senha muito curta (mínimo 6 caracteres).',
+    'auth/invalid-email':'E-mail inválido.',
+    'auth/network-request-failed':'Falha de conexão com a internet.',
+    'auth/configuration-not-found':'Login por e-mail/senha não está ativado no projeto Firebase (ative em Authentication → Sign-in method).',
+    'permission-denied':'Sem permissão para ler/gravar — confira as regras de segurança do Firestore (veja o guia).',
+  };
+  return mapa[c] || (err && err.message) || 'Erro desconhecido.';
+}
+
+/* Extrai apiKey/authDomain/projectId/etc. do bloco de configuração que o Firebase mostra
+   (não usa eval — pega cada campo por regex, tolera aspas simples/duplas e vírgula no fim). */
+function parseFirebaseConfigTexto(texto){
+  const campos = ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'];
+  const config = {};
+  campos.forEach(campo=>{
+    const re = new RegExp(campo + '\\s*:\\s*["\']([^"\']+)["\']');
+    const m = texto.match(re);
+    if(m) config[campo] = m[1];
+  });
+  if(!config.apiKey || !config.projectId || !config.appId) throw new Error('Não encontrei apiKey, projectId e appId no texto colado. Copie o bloco "firebaseConfig" inteiro, do jeito que o Firebase mostrou.');
+  return config;
+}
+
+function inicializarFirebase(config){
+  if(typeof firebase==='undefined'){
+    nuvemErro = 'Não foi possível carregar a biblioteca do Firebase (confira sua conexão com a internet e recarregue a página).';
+    return;
+  }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(config);
+    nuvemAuth = firebase.auth();
+    nuvemDb = firebase.firestore();
+    nuvemConfig = config;
+    nuvemAuth.onAuthStateChanged(user=>{
+      nuvemUser = user;
+      if(user){ conectarListenerNuvem(); }
+      else if(nuvemUnsubscribe){ nuvemUnsubscribe(); nuvemUnsubscribe=null; }
+      if(currentTab==='nuvem') render();
+    });
+  }catch(err){
+    nuvemErro = traduzErroFirebase(err);
+  }
+}
+
+function iniciarNuvemSeConfigurado(){
+  if(NUVEM_CONFIG_EMBUTIDA){
+    inicializarFirebase(NUVEM_CONFIG_EMBUTIDA);
+    return;
+  }
+  const salvo = localStorage.getItem('escalaNuvemConfig');
+  if(!salvo) return;
+  try{ inicializarFirebase(JSON.parse(salvo)); }catch(err){ /* configuração salva corrompida — ignora, usuário reconfigura na aba Nuvem */ }
+}
+
+function payloadAtual(){ return JSON.stringify({ state, escalaAtual }); }
+/* Firestore não guarda objetos Date; ao salvar viram string ISO (via JSON.stringify) e,
+   ao carregar de volta, reconstruímos o Date de cada culto a partir do dataISO (que é sempre confiável). */
+function hidratarCultos(cultos){
+  return (cultos||[]).map(c=>Object.assign({}, c, { data: new Date(c.dataISO+'T12:00:00') }));
+}
+function aplicarPayloadRemoto(payloadTexto){
+  const dados = JSON.parse(payloadTexto);
+  nuvemAplicandoRemoto = true;
+  state = dados.state || { people:[], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+  escalaAtual = dados.escalaAtual ? Object.assign({}, dados.escalaAtual, { cultos: hidratarCultos(dados.escalaAtual.cultos) }) : null;
+  nuvemUltimoPayloadEnviado = payloadTexto;
+  editingId = null;
+  render();
+  nuvemAplicandoRemoto = false;
+}
+
+function conectarListenerNuvem(){
+  if(!nuvemDb || !nuvemUser) return;
+  if(nuvemUnsubscribe){ nuvemUnsubscribe(); nuvemUnsubscribe=null; }
+  nuvemDocRef().get().then(doc=>{
+    let pendente = Promise.resolve();
+    if(doc.exists){
+      const remoto = doc.data().payload;
+      if(state.people.length===0 && !escalaAtual){
+        aplicarPayloadRemoto(remoto);
+        toast('Dados carregados da nuvem.');
+      } else if(remoto!==payloadAtual()){
+        const carregarDaNuvem = confirm('Encontrei dados salvos na nuvem, diferentes do que está nesta tela.\n\nClique OK para carregar os dados da nuvem (substitui o que está aqui agora), ou Cancelar para manter os dados desta tela e enviá-los pra nuvem (substitui os da nuvem).');
+        if(carregarDaNuvem){ aplicarPayloadRemoto(remoto); toast('Dados carregados da nuvem.'); }
+        else { pendente = sincronizarAgora(true); }
+      } else {
+        nuvemUltimoPayloadEnviado = remoto;
+      }
+    } else {
+      pendente = sincronizarAgora(true);
+    }
+    // Só liga o listener em tempo real DEPOIS que qualquer envio inicial pendente terminar — assim
+    // "nuvemUltimoPayloadEnviado" já está correto e o primeiro retorno do listener (que é sempre o eco
+    // do nosso próprio envio) não é interpretado por engano como uma mudança vinda de outro aparelho.
+    pendente.then(()=>iniciarListenerTempoReal());
+  }).catch(err=>{ toast('Erro ao ler dados da nuvem: ' + traduzErroFirebase(err)); });
+}
+
+function iniciarListenerTempoReal(){
+  if(nuvemUnsubscribe){ nuvemUnsubscribe(); }
+  nuvemUnsubscribe = nuvemDocRef().onSnapshot(doc=>{
+    if(!doc.exists) return;
+    if(doc.metadata.hasPendingWrites) return; // eco da nossa própria escrita — ignora
+    const remoto = doc.data().payload;
+    if(remoto===nuvemUltimoPayloadEnviado) return; // nada mudou de fato
+    aplicarPayloadRemoto(remoto);
+    toast('🔄 Dados atualizados a partir da nuvem (alterados em outro aparelho).');
+  }, ()=>{ /* listener caiu (ex.: perda de permissão) — silencioso; a próxima ação manual reconecta */ });
+}
+
+function agendarSincronizacaoNuvem(){
+  if(!nuvemUser || !nuvemDb || nuvemAplicandoRemoto) return;
+  clearTimeout(nuvemSalvarTimeout);
+  nuvemSalvarTimeout = setTimeout(()=>sincronizarAgora(false), 1800);
+}
+
+function sincronizarAgora(silencioso){
+  if(!nuvemUser || !nuvemDb) return Promise.resolve();
+  const payload = payloadAtual();
+  if(payload===nuvemUltimoPayloadEnviado) return Promise.resolve();
+  nuvemSincronizando = true;
+  if(currentTab==='nuvem') render();
+  return nuvemDocRef().set({
+    payload,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    atualizadoPor: nuvemUser.email || '',
+  }).then(()=>{
+    nuvemUltimoPayloadEnviado = payload;
+    nuvemUltimaSincronizacao = new Date();
+    nuvemSincronizando = false;
+    if(currentTab==='nuvem') render();
+    if(!silencioso) toast('Sincronizado com a nuvem.');
+  }).catch(err=>{
+    nuvemSincronizando = false;
+    if(currentTab==='nuvem') render();
+    toast('Não foi possível sincronizar: ' + traduzErroFirebase(err));
+  });
+}
+
+function renderNuvem(){
+  if(!nuvemConfig){
+    return `
+    <div class="card">
+      <h2>☁️ Sincronizar com a nuvem</h2>
+      <p class="tiny">Isso é opcional. Sem configurar nada aqui, o app continua funcionando exatamente como sempre funcionou, só neste aparelho, com export/import manual de arquivo. Configurando, o cadastro e a escala ficam salvos automaticamente num banco de dados online (Firebase, gratuito pra esse tamanho de uso), e você consegue abrir este mesmo arquivo em outro aparelho e ver os mesmos dados.</p>
+      <p class="tiny">Antes de colar aqui, crie um projeto Firebase gratuito e copie a configuração — siga o passo a passo enviado junto com este arquivo. Cole abaixo o bloco inteiro que o Firebase mostrou (o texto com "apiKey", "authDomain" etc.):</p>
+      <div class="field">
+        <textarea id="nuvem-config-texto" rows="8" style="font-family:monospace; font-size:.8rem;" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;...&quot;,&#10;  authDomain: &quot;...&quot;,&#10;  projectId: &quot;...&quot;,&#10;  ...&#10;};"></textarea>
+      </div>
+      ${nuvemErro ? `<div class="banner danger">${esc(nuvemErro)}</div>` : ''}
+      <button id="nuvem-salvar-config">Salvar configuração</button>
+    </div>`;
+  }
+  if(!nuvemUser){
+    return `
+    <div class="card">
+      <h2>☁️ Entrar na nuvem</h2>
+      <p class="tiny">Projeto configurado: <strong>${esc(nuvemConfig.projectId)}</strong>. Entre com o e-mail e senha da conta que administra a escala. Se ainda não criou essa conta, use "Criar minha conta" (faça isso só uma vez, no primeiro aparelho).</p>
+      <div class="toolbar" style="align-items:end;">
+        <div class="field" style="max-width:260px; margin-bottom:0;"><label>E-mail</label><input type="email" id="nuvem-email" autocomplete="username"></div>
+        <div class="field" style="max-width:200px; margin-bottom:0;"><label>Senha</label><input type="password" id="nuvem-senha" autocomplete="current-password"></div>
+      </div>
+      ${nuvemErro ? `<div class="banner danger" style="margin-top:10px;">${esc(nuvemErro)}</div>` : ''}
+      <div class="toolbar">
+        <button id="nuvem-entrar" ${nuvemCarregandoAuth?'disabled':''}>Entrar</button>
+        <button id="nuvem-criar-conta" class="secondary" ${nuvemCarregandoAuth?'disabled':''}>Criar minha conta</button>
+        ${NUVEM_CONFIG_EMBUTIDA ? '' : '<button type="button" id="nuvem-trocar-config" class="ghost">Trocar configuração</button>'}
+      </div>
+    </div>`;
+  }
+  return `
+  <div class="card">
+    <h2>☁️ Nuvem conectada</h2>
+    <div class="banner ok">Conectado como <strong>${esc(nuvemUser.email)}</strong> · Projeto: ${esc(nuvemConfig.projectId)}</div>
+    <p class="tiny">O cadastro e a escala gerada são enviados pra nuvem automaticamente alguns segundos depois de qualquer alteração nesta tela, e atualizam sozinhos aqui se forem alterados em outro aparelho logado com a mesma conta.</p>
+    <p class="tiny">${nuvemSincronizando ? 'Sincronizando…' : (nuvemUltimaSincronizacao ? 'Última sincronização: ' + nuvemUltimaSincronizacao.toLocaleString('pt-BR') : 'Ainda não sincronizou nesta sessão.')}</p>
+    <div class="toolbar">
+      <button type="button" id="nuvem-sincronizar-agora" class="secondary">Sincronizar agora</button>
+      <button type="button" id="nuvem-carregar" class="secondary">Carregar da nuvem</button>
+      <button type="button" id="nuvem-sair" class="ghost">Sair</button>
+    </div>
+  </div>`;
+}
+
+function bindNuvemEvents(){
+  const salvarConfigBtn = document.getElementById('nuvem-salvar-config');
+  if(salvarConfigBtn) salvarConfigBtn.addEventListener('click', ()=>{
+    const texto = document.getElementById('nuvem-config-texto').value;
+    try{
+      const config = parseFirebaseConfigTexto(texto);
+      localStorage.setItem('escalaNuvemConfig', JSON.stringify(config));
+      nuvemErro = '';
+      inicializarFirebase(config);
+      render();
+      toast('Configuração salva. Agora entre com seu e-mail e senha.');
+    }catch(err){ nuvemErro = err.message; render(); }
+  });
+
+  const entrarBtn = document.getElementById('nuvem-entrar');
+  if(entrarBtn) entrarBtn.addEventListener('click', ()=>{
+    const email = document.getElementById('nuvem-email').value.trim();
+    const senha = document.getElementById('nuvem-senha').value;
+    if(!email || !senha){ nuvemErro = 'Preencha e-mail e senha.'; render(); return; }
+    nuvemCarregandoAuth = true; nuvemErro = ''; render();
+    nuvemAuth.signInWithEmailAndPassword(email, senha)
+      .catch(err=>{ nuvemErro = traduzErroFirebase(err); })
+      .finally(()=>{ nuvemCarregandoAuth = false; render(); });
+  });
+
+  const criarContaBtn = document.getElementById('nuvem-criar-conta');
+  if(criarContaBtn) criarContaBtn.addEventListener('click', ()=>{
+    const email = document.getElementById('nuvem-email').value.trim();
+    const senha = document.getElementById('nuvem-senha').value;
+    if(!email || !senha){ nuvemErro = 'Preencha e-mail e senha.'; render(); return; }
+    if(!confirm(`Criar uma nova conta de administrador com o e-mail ${email}? Só faça isso na primeira vez.`)) return;
+    nuvemCarregandoAuth = true; nuvemErro = ''; render();
+    nuvemAuth.createUserWithEmailAndPassword(email, senha)
+      .catch(err=>{ nuvemErro = traduzErroFirebase(err); })
+      .finally(()=>{ nuvemCarregandoAuth = false; render(); });
+  });
+
+  const trocarConfigBtn = document.getElementById('nuvem-trocar-config');
+  if(trocarConfigBtn) trocarConfigBtn.addEventListener('click', ()=>{
+    if(!confirm('Isso remove a configuração de nuvem salva neste aparelho (não apaga nada da nuvem). Continuar?')) return;
+    localStorage.removeItem('escalaNuvemConfig');
+    nuvemConfig = null; nuvemAuth = null; nuvemDb = null; nuvemUser = null; nuvemErro = '';
+    if(nuvemUnsubscribe){ nuvemUnsubscribe(); nuvemUnsubscribe = null; }
+    render();
+  });
+
+  const syncBtn = document.getElementById('nuvem-sincronizar-agora');
+  if(syncBtn) syncBtn.addEventListener('click', ()=>{
+    nuvemUltimoPayloadEnviado = null; // força reenvio mesmo que pareça igual
+    sincronizarAgora(false);
+  });
+
+  const carregarBtn = document.getElementById('nuvem-carregar');
+  if(carregarBtn) carregarBtn.addEventListener('click', ()=>{
+    if(!confirm('Isso substitui os dados desta tela pelos dados salvos na nuvem. Continuar?')) return;
+    nuvemDocRef().get().then(doc=>{
+      if(!doc.exists){ toast('Ainda não há dados salvos na nuvem.'); return; }
+      aplicarPayloadRemoto(doc.data().payload);
+      toast('Dados carregados da nuvem.');
+    }).catch(err=>toast('Erro ao carregar da nuvem: ' + traduzErroFirebase(err)));
+  });
+
+  const sairBtn = document.getElementById('nuvem-sair');
+  if(sairBtn) sairBtn.addEventListener('click', ()=>{
+    nuvemAuth.signOut().then(()=>toast('Você saiu da nuvem. Os dados continuam salvos lá.'));
+  });
+}
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
+switchTab('pessoas');
+iniciarNuvemSeConfigurado();
+/* Rede de segurança: além de agendar o envio pra nuvem a cada "render()" (o que cobre a
+   grande maioria das ações), roda esta checagem periódica pra garantir que NENHUMA alteração
+   fique presa só localmente — inclusive telas que atualizam partes da página sem um render()
+   completo. Chama sincronizarAgora() DIRETO (não agendarSincronizacaoNuvem()) de propósito:
+   isso não atrasa um envio que já esteja com o debounce de ~1.8s em andamento, e não faz nada
+   (nem gasta escrita no Firestore) se não há nada de novo pra enviar — seguro rodar sempre. */
+setInterval(()=>{ if(nuvemUser) sincronizarAgora(true); }, 4000);
+</script>
+</body>
+</html>
