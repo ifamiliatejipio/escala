@@ -1874,6 +1874,11 @@ let nuvemAplicandoRemoto = false;
 let nuvemUnsubscribe = null;
 let nuvemSalvarTimeout = null;
 let nuvemUltimoPayloadEnviado = null;
+/* Só fica true depois que os dados da nuvem foram lidos nesta sessão. Enquanto for false, NADA é
+   enviado pra nuvem — senão a tela recém-aberta (que sempre começa vazia) sobrescreveria os dados
+   salvos lá antes de eles chegarem. */
+let nuvemCarregado = false;
+let nuvemRetentativaTimeout = null;
 function nuvemDocRef(){ return nuvemDb.collection('escalaConsolidacao').doc('dados'); }
 
 function traduzErroFirebase(err){
@@ -1918,6 +1923,8 @@ function inicializarFirebase(config){
     nuvemConfig = config;
     nuvemAuth.onAuthStateChanged(user=>{
       nuvemUser = user;
+      nuvemCarregado = false;
+      clearTimeout(nuvemRetentativaTimeout);
       if(user){ conectarListenerNuvem(); }
       else if(nuvemUnsubscribe){ nuvemUnsubscribe(); nuvemUnsubscribe=null; }
       if(currentTab==='nuvem') render();
@@ -1957,7 +1964,11 @@ function aplicarPayloadRemoto(payloadTexto){
 function conectarListenerNuvem(){
   if(!nuvemDb || !nuvemUser) return;
   if(nuvemUnsubscribe){ nuvemUnsubscribe(); nuvemUnsubscribe=null; }
+  clearTimeout(nuvemRetentativaTimeout);
+  nuvemCarregado = false;
   nuvemDocRef().get().then(doc=>{
+    nuvemErro = '';
+    nuvemCarregado = true;
     let pendente = Promise.resolve();
     if(doc.exists){
       const remoto = doc.data().payload;
@@ -1978,7 +1989,13 @@ function conectarListenerNuvem(){
     // "nuvemUltimoPayloadEnviado" já está correto e o primeiro retorno do listener (que é sempre o eco
     // do nosso próprio envio) não é interpretado por engano como uma mudança vinda de outro aparelho.
     pendente.then(()=>iniciarListenerTempoReal());
-  }).catch(err=>{ toast('Erro ao ler dados da nuvem: ' + traduzErroFirebase(err)); });
+  }).catch(err=>{
+    // Não conseguiu ler: continua SEM enviar nada (pra não apagar o que está na nuvem) e tenta de novo.
+    nuvemErro = 'Erro ao ler dados da nuvem: ' + traduzErroFirebase(err);
+    toast(nuvemErro);
+    if(currentTab==='nuvem') render();
+    nuvemRetentativaTimeout = setTimeout(()=>{ if(nuvemUser && !nuvemCarregado) conectarListenerNuvem(); }, 15000);
+  });
 }
 
 function iniciarListenerTempoReal(){
@@ -1994,13 +2011,13 @@ function iniciarListenerTempoReal(){
 }
 
 function agendarSincronizacaoNuvem(){
-  if(!nuvemUser || !nuvemDb || nuvemAplicandoRemoto) return;
+  if(!nuvemUser || !nuvemDb || !nuvemCarregado || nuvemAplicandoRemoto) return;
   clearTimeout(nuvemSalvarTimeout);
   nuvemSalvarTimeout = setTimeout(()=>sincronizarAgora(false), 1800);
 }
 
 function sincronizarAgora(silencioso){
-  if(!nuvemUser || !nuvemDb) return Promise.resolve();
+  if(!nuvemUser || !nuvemDb || !nuvemCarregado) return Promise.resolve();
   const payload = payloadAtual();
   if(payload===nuvemUltimoPayloadEnviado) return Promise.resolve();
   nuvemSincronizando = true;
@@ -2057,6 +2074,8 @@ function renderNuvem(){
   <div class="card">
     <h2>☁️ Nuvem conectada</h2>
     <div class="banner ok">Conectado como <strong>${esc(nuvemUser.email)}</strong> · Projeto: ${esc(nuvemConfig.projectId)}</div>
+    ${nuvemErro ? `<div class="banner danger">${esc(nuvemErro)}</div>` : ''}
+    ${nuvemCarregado ? '' : '<p class="tiny">Carregando dados da nuvem… (nada é enviado até terminar)</p>'}
     <p class="tiny">O cadastro e a escala gerada são enviados pra nuvem automaticamente alguns segundos depois de qualquer alteração nesta tela, e atualizam sozinhos aqui se forem alterados em outro aparelho logado com a mesma conta.</p>
     <p class="tiny">${nuvemSincronizando ? 'Sincronizando…' : (nuvemUltimaSincronizacao ? 'Última sincronização: ' + nuvemUltimaSincronizacao.toLocaleString('pt-BR') : 'Ainda não sincronizou nesta sessão.')}</p>
     <div class="toolbar">
@@ -2115,6 +2134,7 @@ function bindNuvemEvents(){
 
   const syncBtn = document.getElementById('nuvem-sincronizar-agora');
   if(syncBtn) syncBtn.addEventListener('click', ()=>{
+    if(!nuvemCarregado){ toast('Ainda carregando os dados da nuvem — tente de novo em instantes.'); conectarListenerNuvem(); return; }
     nuvemUltimoPayloadEnviado = null; // força reenvio mesmo que pareça igual
     sincronizarAgora(false);
   });
@@ -2124,6 +2144,8 @@ function bindNuvemEvents(){
     if(!confirm('Isso substitui os dados desta tela pelos dados salvos na nuvem. Continuar?')) return;
     nuvemDocRef().get().then(doc=>{
       if(!doc.exists){ toast('Ainda não há dados salvos na nuvem.'); return; }
+      nuvemCarregado = true;
+      nuvemErro = '';
       aplicarPayloadRemoto(doc.data().payload);
       toast('Dados carregados da nuvem.');
     }).catch(err=>toast('Erro ao carregar da nuvem: ' + traduzErroFirebase(err)));
@@ -2146,7 +2168,7 @@ iniciarNuvemSeConfigurado();
    completo. Chama sincronizarAgora() DIRETO (não agendarSincronizacaoNuvem()) de propósito:
    isso não atrasa um envio que já esteja com o debounce de ~1.8s em andamento, e não faz nada
    (nem gasta escrita no Firestore) se não há nada de novo pra enviar — seguro rodar sempre. */
-setInterval(()=>{ if(nuvemUser) sincronizarAgora(true); }, 4000);
+setInterval(()=>{ if(nuvemUser && nuvemCarregado) sincronizarAgora(true); }, 4000);
 </script>
 </body>
 </html>
