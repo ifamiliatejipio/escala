@@ -162,13 +162,25 @@ const SLOTS = [
   {key:'dom19',  label:'Domingo 19h',  labelCurta:'DOMINGO', weekday:0, horaFixa:'19:00'},
 ];
 const SLOT_MAP = Object.fromEntries(SLOTS.map(s=>[s.key,s]));
+/* Horário e "tem culto?" de cada slot vêm de Configurações (state.config.horarios / cultosAtivos).
+   Configurações antigas, salvas antes desses campos existirem, caem no padrão do SLOTS acima. */
+function horaDoSlot(key){ return (state.config.horarios||{})[key] || SLOT_MAP[key].horaFixa || null; }
+function slotAtivo(key){ return (state.config.cultosAtivos||{})[key] !== false; }
+function formatarHoraCurta(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':');
+  return m==='00' ? `${Number(h)}h` : `${Number(h)}h${m}`;
+}
+/* Domingo tem vários cultos, então o rótulo inclui o horário configurado (ex: "Domingo 16h"). */
+function slotLabel(s){ return s.weekday===0 ? `Domingo ${formatarHoraCurta(horaDoSlot(s.key))}` : s.label; }
 const MINISTERIOS = ['Eles','Elas','Topo'];
 const CATEGORIAS = ['Eles','TopoH','TopoF','Elas','Supervisor'];
 const CATEGORIA_LABEL = {Eles:'Eles', Elas:'Elas', TopoH:'Topo (homem)', TopoF:'Topo (mulher)', Supervisor:'Supervisor(a)'};
 
 const DEFAULT_CONFIG = {
   quotas: {Eles:2, Elas:3, TopoH:1, TopoF:1, Supervisor:1},
-  horarios: {terca:'19:30', quarta:'19:30', quinta:'19:30'},
+  horarios: {terca:'19:30', quarta:'19:30', quinta:'19:30', dom10:'10:00', dom15:'15:00', dom17:'17:00', dom19:'19:00'},
+  cultosAtivos: {terca:true, quarta:true, quinta:true, dom10:true, dom15:true, dom17:true, dom19:true},
   minutosAntecedencia: 50,
 };
 
@@ -203,7 +215,7 @@ function nomeComRede(p){ if(!p) return '?'; return p.rede ? `${p.nome} (${p.rede
 function ativoDe(p){ return p.ativo !== false; }
 /* Resumo textual da disponibilidade recorrente de uma pessoa, ex: "Terça-feira, Domingo 10h". */
 function disponibilidadeResumo(p){
-  return SLOTS.filter(s=>p && p.disponibilidade && p.disponibilidade[s.key]).map(s=>s.label).join(', ') || 'Nenhuma disponibilidade marcada';
+  return SLOTS.filter(s=>p && p.disponibilidade && p.disponibilidade[s.key]).map(slotLabel).join(', ') || 'Nenhuma disponibilidade marcada';
 }
 
 function categoriaDe(p){
@@ -251,19 +263,19 @@ function gerarCultosDoMes(anoMes){
   for(let dia=1; dia<=totalDias; dia++){
     const data = new Date(ano, mes-1, dia);
     const wd = data.getDay();
-    SLOTS.filter(s=>s.weekday===wd).forEach(s=>{
-      const horaCulto = s.horaFixa || state.config.horarios[s.key] || null;
+    SLOTS.filter(s=>s.weekday===wd && slotAtivo(s.key)).forEach(s=>{
+      const horaCulto = horaDoSlot(s.key);
       cultos.push({
         id: `c_${ano}${String(mes).padStart(2,'0')}${String(dia).padStart(2,'0')}_${s.key}`,
         data, slot: s.key, horaCulto,
-        label: `${s.label} — ${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`,
+        label: `${slotLabel(s)} — ${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`,
         dataISO: `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`,
         assigned: {Eles:[], Elas:[], TopoH:[], TopoF:[], Supervisor:[]},
         observacoes: {}, // personId -> texto da nota manual
       });
     });
   }
-  cultos.sort((a,b)=> a.data - b.data || a.slot.localeCompare(b.slot));
+  cultos.sort((a,b)=> a.data - b.data || (a.horaCulto||'').localeCompare(b.horaCulto||''));
   return cultos;
 }
 function totalCulto(culto){ return CATEGORIAS.reduce((s,c)=>s+culto.assigned[c].length,0); }
@@ -522,10 +534,7 @@ function repRowHtml(kind, idx, item){
           <label>Horário (se domingo)</label>
           <select class="rep-horario">
             <option value="">Dia todo</option>
-            <option value="dom10" ${item.horario==='dom10'?'selected':''}>10h</option>
-            <option value="dom15" ${item.horario==='dom15'?'selected':''}>15h</option>
-            <option value="dom17" ${item.horario==='dom17'?'selected':''}>17h</option>
-            <option value="dom19" ${item.horario==='dom19'?'selected':''}>19h</option>
+            ${SLOTS.filter(s=>s.weekday===0).map(s=>`<option value="${s.key}" ${item.horario===s.key?'selected':''}>${formatarHoraCurta(horaDoSlot(s.key))}</option>`).join('')}
           </select>
         </div>
         <div class="field" style="margin-bottom:0">
@@ -633,7 +642,7 @@ function renderFormPessoa(){
         <div class="checks" id="f-disponibilidade">
           ${SLOTS.map(s=>`
             <label class="check-pill ${disp[s.key]?'checked':''}">
-              <input type="checkbox" value="${s.key}" ${disp[s.key]?'checked':''}> ${s.label}
+              <input type="checkbox" value="${s.key}" ${disp[s.key]?'checked':''}> ${slotLabel(s)}${slotAtivo(s.key)?'':' <span class="tiny">(sem culto no momento)</span>'}
             </label>`).join('')}
           <button type="button" id="marcar-todos-dias" class="secondary small">Selecionar todos</button>
           <button type="button" id="limpar-todos-dias" class="ghost small">Limpar</button>
@@ -710,7 +719,7 @@ function renderTabelaPessoas(){
               ${p.revisar?'<span class="badge review">Revisar</span>':''}
               ${p.podeServir2x?'<span class="badge dupla" title="Pode ser escalada em até 2 cultos no mês">2x</span>':''}
             </td>
-            <td class="tiny">${SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(s=>s.label).join(', ')||'—'}</td>
+            <td class="tiny">${SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(slotLabel).join(', ')||'—'}</td>
             <td class="tiny">${(p.vinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—'}</td>
             <td class="tiny">${(p.naoVinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—'}</td>
             <td class="tiny" style="max-width:220px;">${esc((p.observacoes||'').slice(0,90))}${(p.observacoes||'').length>90?'…':''}</td>
@@ -754,7 +763,7 @@ function gerarPdfPessoas(){
       <td>${esc(nomeComRede(p))}</td>
       <td>${esc(CATEGORIA_LABEL[categoriaDe(p)])}</td>
       <td>${ativoDe(p)?'Ativo':'Inativo'}${p.revisar?' (revisar)':''}${p.podeServir2x?' (2x)':''}</td>
-      <td>${esc(SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(s=>s.label).join(', ')||'—')}</td>
+      <td>${esc(SLOTS.filter(s=>p.disponibilidade&&p.disponibilidade[s.key]).map(slotLabel).join(', ')||'—')}</td>
       <td>${esc((p.vinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—')}</td>
       <td>${esc((p.naoVinculoIds||[]).map(id=>{const o=findPerson(id); return o?nomeComRede(o):null;}).filter(Boolean).join(', ')||'—')}</td>
     </tr>`).join('');
@@ -772,7 +781,7 @@ function gerarPdfPessoas(){
    ABA: CONFIGURAÇÕES
    ========================================================================== */
 function renderConfig(){
-  const q = state.config.quotas, h = state.config.horarios;
+  const q = state.config.quotas;
   return `
   <div class="card">
     <h2>Composição padrão de cada culto</h2>
@@ -788,12 +797,14 @@ function renderConfig(){
   </div>
 
   <div class="card">
-    <h2>Horário dos cultos de semana</h2>
-    <p class="tiny">Domingo já usa os horários fixos (10h, 15h, 17h, 19h). Defina o horário de terça, quarta e quinta para calcular o horário de chegada.</p>
+    <h2>Dias e horários dos cultos</h2>
+    <p class="tiny">Desmarque um culto que não vai acontecer (ele deixa de entrar nas próximas escalas geradas) e ajuste o horário de cada um. A disponibilidade das pessoas continua ligada a cada linha: quem marcou o culto de uma linha passa a servir no horário novo dela. Uma escala já gerada não muda — gere de novo pra aplicar.</p>
     <div class="grid3">
-      <div class="field"><label>Terça-feira</label><input type="time" class="cfg-horario" data-dia="terca" value="${h.terca}"></div>
-      <div class="field"><label>Quarta-feira</label><input type="time" class="cfg-horario" data-dia="quarta" value="${h.quarta}"></div>
-      <div class="field"><label>Quinta-feira</label><input type="time" class="cfg-horario" data-dia="quinta" value="${h.quinta}"></div>
+      ${SLOTS.map(s=>`
+        <div class="field">
+          <label class="check-pill ${slotAtivo(s.key)?'checked':''}" style="display:inline-flex"><input type="checkbox" class="cfg-ativo" data-dia="${s.key}" ${slotAtivo(s.key)?'checked':''}> ${s.weekday===0?'Domingo':s.label}</label>
+          <input type="time" class="cfg-horario" data-dia="${s.key}" value="${horaDoSlot(s.key)||''}">
+        </div>`).join('')}
     </div>
   </div>
 
@@ -1350,6 +1361,9 @@ function bindTabelaPessoasEvents(){
 }
 
 function bindConfigEvents(){
+  document.querySelectorAll('.cfg-ativo').forEach(cb=>{
+    cb.addEventListener('change', ()=>cb.closest('.check-pill').classList.toggle('checked', cb.checked));
+  });
   document.querySelectorAll('.cfg-quota').forEach(inp=>{
     inp.addEventListener('input', ()=>{
       const total = CATEGORIAS.reduce((s,cat)=>{
@@ -1361,7 +1375,10 @@ function bindConfigEvents(){
   });
   document.getElementById('salvar-config').addEventListener('click', ()=>{
     document.querySelectorAll('.cfg-quota').forEach(inp=>{ state.config.quotas[inp.dataset.cat] = parseInt(inp.value)||0; });
+    state.config.horarios = state.config.horarios || {};
+    state.config.cultosAtivos = state.config.cultosAtivos || {};
     document.querySelectorAll('.cfg-horario').forEach(inp=>{ state.config.horarios[inp.dataset.dia] = inp.value; });
+    document.querySelectorAll('.cfg-ativo').forEach(inp=>{ state.config.cultosAtivos[inp.dataset.dia] = inp.checked; });
     state.config.minutosAntecedencia = parseInt(document.getElementById('cfg-antecedencia').value)||0;
     toast('Configurações salvas.');
     render();
