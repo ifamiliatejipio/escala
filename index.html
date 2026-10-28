@@ -102,6 +102,10 @@
   .filter-btn{padding:6px 12px; border-radius:20px; font-size:.78rem; background:#f1f0fa; color:var(--muted); font-weight:600;}
   .filter-btn.active{background:var(--accent); color:#fff;}
   .search-box{max-width:280px;}
+  .filtro-culto{margin:4px 0 12px; padding:10px 12px; border:1px solid var(--border); border-radius:10px;}
+  .filtro-culto .checks{margin-top:6px;}
+  .direcionar{margin:0 0 12px; padding:8px 12px; border:1px dashed var(--border); border-radius:10px;}
+  .direcionar summary{cursor:pointer;}
 
   /* ---- Impressão / Gerar PDF ---- */
   #print-area{display:none;}
@@ -191,6 +195,14 @@ let currentTab = 'pessoas';
 let editingId = null;
 let filtroPessoas = 'todos'; // todos | ativos | inativos | supervisores | revisar
 let buscaPessoas = '';
+// Filtro por culto na lista de pessoas: slots marcados + como combinar (algum | todos | somente | nenhum)
+let filtroCulto = { slots: [], modo: 'algum' };
+const FILTRO_CULTO_MODOS = {
+  algum:   'Pode em pelo menos um dos marcados',
+  todos:   'Pode em todos os marcados',
+  somente: 'Pode SOMENTE nos marcados (em nenhum outro)',
+  nenhum:  'Não pode em nenhum dos marcados',
+};
 let vinculoSelecionados = { positivo: [], negativo: [] }; // ids selecionados nos seletores de vínculo do formulário aberto
 
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
@@ -684,16 +696,36 @@ function renderFormPessoa(){
   </div>`;
 }
 
-function renderTabelaPessoas(){
+function pessoaPassaFiltroCulto(p){
+  const marcados = filtroCulto.slots;
+  if(!marcados.length) return true;
+  const disp = p.disponibilidade || {};
+  if(filtroCulto.modo==='todos') return marcados.every(k=>disp[k]);
+  if(filtroCulto.modo==='nenhum') return !marcados.some(k=>disp[k]);
+  if(filtroCulto.modo==='somente') return marcados.some(k=>disp[k]) && SLOTS.every(s=>!disp[s.key] || marcados.includes(s.key));
+  return marcados.some(k=>disp[k]);
+}
+/* Aplica os filtros da lista de pessoas (status, culto, busca). Usado pela tabela e pelo PDF, pra
+   que o relatório impresso seja exatamente o que está na tela. */
+function filtrarPessoas(){
   let lista = state.people;
-  if(filtroPessoas==='ativos') lista = lista.filter(ativoDe);
-  if(filtroPessoas==='inativos') lista = lista.filter(p=>!ativoDe(p));
-  if(filtroPessoas==='supervisores') lista = lista.filter(p=>p.supervisor);
-  if(filtroPessoas==='revisar') lista = lista.filter(p=>p.revisar);
+  const partes = [];
+  if(filtroPessoas==='ativos'){ lista = lista.filter(ativoDe); partes.push('Ativos'); }
+  if(filtroPessoas==='inativos'){ lista = lista.filter(p=>!ativoDe(p)); partes.push('Inativos'); }
+  if(filtroPessoas==='supervisores'){ lista = lista.filter(p=>p.supervisor); partes.push('Supervisores'); }
+  if(filtroPessoas==='revisar'){ lista = lista.filter(p=>p.revisar); partes.push('Pendentes de revisão'); }
+  if(filtroCulto.slots.length){
+    lista = lista.filter(pessoaPassaFiltroCulto);
+    partes.push(`${FILTRO_CULTO_MODOS[filtroCulto.modo]}: ${SLOTS.filter(s=>filtroCulto.slots.includes(s.key)).map(slotLabel).join(', ')}`);
+  }
   if(buscaPessoas.trim()){
     const q = buscaPessoas.trim().toLowerCase();
     lista = lista.filter(p=> p.nome.toLowerCase().includes(q) || (p.rede||'').toLowerCase().includes(q));
   }
+  return { lista, filtroTxt: partes.join(' · ') || 'Todos' };
+}
+function renderTabelaPessoas(){
+  const { lista } = filtrarPessoas();
   return `
   <div class="card">
     <h2>Pessoas cadastradas (${state.people.length})</h2>
@@ -706,6 +738,35 @@ function renderTabelaPessoas(){
       <input type="text" class="search-box" id="busca-pessoas" placeholder="Buscar por nome ou rede..." value="${esc(buscaPessoas)}">
       <button class="ghost small" id="gerar-pdf-pessoas">Gerar PDF</button>
     </div>
+    <div class="filtro-culto">
+      <strong class="tiny">Filtrar por culto:</strong>
+      <div class="checks">
+        ${SLOTS.map(s=>`
+          <label class="check-pill ${filtroCulto.slots.includes(s.key)?'checked':''}">
+            <input type="checkbox" class="filtro-culto-slot" value="${s.key}" ${filtroCulto.slots.includes(s.key)?'checked':''}> ${slotLabel(s)}${slotAtivo(s.key)?'':' <span class="tiny">(sem culto)</span>'}
+            <span class="tiny">(${state.people.filter(p=>p.disponibilidade&&p.disponibilidade[s.key]).length})</span>
+          </label>`).join('')}
+      </div>
+      <div class="toolbar" style="margin-top:6px;">
+        <select id="filtro-culto-modo" style="max-width:340px;">
+          ${Object.entries(FILTRO_CULTO_MODOS).map(([k,v])=>`<option value="${k}" ${filtroCulto.modo===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+        ${filtroCulto.slots.length?'<button type="button" class="ghost small" id="filtro-culto-limpar">Limpar filtro de culto</button>':''}
+        <span class="tiny">Mostrando <strong>${lista.length}</strong> de ${state.people.length} pessoa(s).</span>
+      </div>
+    </div>
+    ${lista.length ? `
+    <details class="direcionar">
+      <summary class="tiny"><strong>Direcionar as ${lista.length} pessoa(s) desta lista para outro culto</strong></summary>
+      <div class="toolbar" style="align-items:end; margin-top:8px;">
+        <div class="field" style="margin-bottom:0;"><label>Tirar de</label>
+          <select id="direcionar-de">${SLOTS.map(s=>`<option value="${s.key}">${slotLabel(s)}${slotAtivo(s.key)?'':' (sem culto)'}</option>`).join('')}</select></div>
+        <div class="field" style="margin-bottom:0;"><label>Passar para</label>
+          <select id="direcionar-para">${SLOTS.map(s=>`<option value="${s.key}">${slotLabel(s)}${slotAtivo(s.key)?'':' (sem culto)'}</option>`).join('')}</select></div>
+        <button type="button" class="secondary small" id="direcionar-aplicar">Aplicar</button>
+      </div>
+      <p class="tiny">Só muda quem está na lista acima e tem o culto de "Tirar de" marcado: ele é desmarcado e o de "Passar para" é marcado. O resto da disponibilidade de cada pessoa fica igual.</p>
+    </details>` : ''}
     ${lista.length===0? '<div class="empty-state">Nenhuma pessoa encontrada.</div>' : `
     <table>
       <thead><tr><th>Nome (rede)</th><th>Categoria</th><th>Status</th><th>Disponibilidade</th><th>Vínculo</th><th>Não pode com</th><th>Obs.</th><th></th></tr></thead>
@@ -747,16 +808,7 @@ function atualizarTabelaPessoas(){
 
 /* Gera um PDF (via impressão do navegador) com a lista de pessoas atualmente filtrada na tela. */
 function gerarPdfPessoas(){
-  let lista = state.people;
-  let filtroTxt = 'Todos';
-  if(filtroPessoas==='ativos'){ lista = lista.filter(ativoDe); filtroTxt = 'Ativos'; }
-  if(filtroPessoas==='inativos'){ lista = lista.filter(p=>!ativoDe(p)); filtroTxt = 'Inativos'; }
-  if(filtroPessoas==='supervisores'){ lista = lista.filter(p=>p.supervisor); filtroTxt = 'Supervisores'; }
-  if(filtroPessoas==='revisar'){ lista = lista.filter(p=>p.revisar); filtroTxt = 'Pendentes de revisão'; }
-  if(buscaPessoas.trim()){
-    const q = buscaPessoas.trim().toLowerCase();
-    lista = lista.filter(p=> p.nome.toLowerCase().includes(q) || (p.rede||'').toLowerCase().includes(q));
-  }
+  const { lista, filtroTxt } = filtrarPessoas();
   const agora = new Date();
   const linhas = lista.map(p=>`
     <tr>
@@ -769,7 +821,7 @@ function gerarPdfPessoas(){
     </tr>`).join('');
   document.getElementById('print-area').innerHTML = `
     <h1>Equipe de Consolidação — Cadastro de Pessoas</h1>
-    <p class="print-meta">Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR').slice(0,5)} · Filtro: ${filtroTxt}${buscaPessoas.trim()?` · Busca: "${esc(buscaPessoas.trim())}"`:''} · Total: ${lista.length} pessoa(s)</p>
+    <p class="print-meta">Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR').slice(0,5)} · Filtro: ${esc(filtroTxt)}${buscaPessoas.trim()?` · Busca: "${esc(buscaPessoas.trim())}"`:''} · Total: ${lista.length} pessoa(s)</p>
     <table class="print-table">
       <thead><tr><th>Nome (rede)</th><th>Categoria</th><th>Status</th><th>Disponibilidade</th><th>Vínculo</th><th>Não pode com</th></tr></thead>
       <tbody>${linhas || '<tr><td colspan="6">Nenhuma pessoa encontrada.</td></tr>'}</tbody>
@@ -1356,6 +1408,29 @@ function bindTabelaPessoasEvents(){
     busca.addEventListener('change', ()=>{ buscaPessoas = busca.value; atualizarTabelaPessoas(); });
     busca.addEventListener('keyup', (e)=>{ if(e.key==='Enter'){ buscaPessoas = busca.value; atualizarTabelaPessoas(); } });
   }
+  document.querySelectorAll('.filtro-culto-slot').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      filtroCulto.slots = [...document.querySelectorAll('.filtro-culto-slot:checked')].map(x=>x.value);
+      atualizarTabelaPessoas();
+    });
+  });
+  const modoSel = document.getElementById('filtro-culto-modo');
+  if(modoSel) modoSel.addEventListener('change', ()=>{ filtroCulto.modo = modoSel.value; atualizarTabelaPessoas(); });
+  const limparCultoBtn = document.getElementById('filtro-culto-limpar');
+  if(limparCultoBtn) limparCultoBtn.addEventListener('click', ()=>{ filtroCulto.slots = []; atualizarTabelaPessoas(); });
+  const direcionarBtn = document.getElementById('direcionar-aplicar');
+  if(direcionarBtn) direcionarBtn.addEventListener('click', ()=>{
+    const de = document.getElementById('direcionar-de').value;
+    const para = document.getElementById('direcionar-para').value;
+    if(de===para){ toast('Escolha cultos diferentes em "Tirar de" e "Passar para".'); return; }
+    const afetadas = filtrarPessoas().lista.filter(p=>p.disponibilidade && p.disponibilidade[de]);
+    if(!afetadas.length){ toast(`Ninguém nesta lista tem ${slotLabel(SLOT_MAP[de])} marcado.`); return; }
+    if(!confirm(`Passar ${afetadas.length} pessoa(s) de ${slotLabel(SLOT_MAP[de])} para ${slotLabel(SLOT_MAP[para])}?`)) return;
+    afetadas.forEach(p=>{ p.disponibilidade[de] = false; p.disponibilidade[para] = true; });
+    atualizarTabelaPessoas();
+    agendarSincronizacaoNuvem();
+    toast(`${afetadas.length} pessoa(s) passada(s) para ${slotLabel(SLOT_MAP[para])}.`);
+  });
   const pdfPessoasBtn = document.getElementById('gerar-pdf-pessoas');
   if(pdfPessoasBtn) pdfPessoasBtn.addEventListener('click', gerarPdfPessoas);
 }
