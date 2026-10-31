@@ -178,6 +178,11 @@ function formatarHoraCurta(hhmm){
 /* Datas especiais (Configurações): numa data cadastrada, valem só os cultos escolhidos pra ela (lista
    vazia = nenhum culto no dia), com um nome opcional (ex: "Culto especial batismo"). */
 function dataEspecial(dataISO){ return (state.config.datasEspeciais||[]).find(d=>d.data===dataISO) || null; }
+/* Cultos que acontecem numa data: os ativos do dia da semana, ou os escolhidos se for data especial. */
+function slotsDoDia(dataISO){
+  const wd = weekdayDeISO(dataISO), especial = dataEspecial(dataISO);
+  return SLOTS.filter(s=>s.weekday===wd && (especial ? especial.cultos.includes(s.key) : slotAtivo(s.key)));
+}
 function formatarDataBR(dataISO){ const [a,m,d] = dataISO.split('-'); return `${d}/${m}/${a}`; }
 const DIAS_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 function weekdayDeISO(dataISO){ const [a,m,d] = dataISO.split('-').map(Number); return new Date(a, m-1, d).getDay(); }
@@ -298,10 +303,9 @@ function gerarCultosDoMes(anoMes){
   const totalDias = new Date(ano, mes, 0).getDate();
   for(let dia=1; dia<=totalDias; dia++){
     const data = new Date(ano, mes-1, dia);
-    const wd = data.getDay();
     const dataISO = `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
     const especial = dataEspecial(dataISO);
-    SLOTS.filter(s=>s.weekday===wd && (especial ? especial.cultos.includes(s.key) : slotAtivo(s.key))).forEach(s=>{
+    slotsDoDia(dataISO).forEach(s=>{
       const horaCulto = horaDoSlot(s.key);
       const nomeEspecial = especial && especial.nome ? especial.nome : '';
       cultos.push({
@@ -329,8 +333,15 @@ function dataDentroDoIntervalo(dataISO, inicio, fim){
 function pessoaBloqueada(pessoa, culto){
   return (pessoa.bloqueios||[]).some(b => dataDentroDoIntervalo(culto.dataISO, b.data, b.dataFim) && (!b.horario || b.horario===culto.slot));
 }
+/* Pedido sem horário escolhido usa o horário da disponibilidade da pessoa nesse dia. Só se ela não tiver
+   disponibilidade em nenhum culto que acontece nesse dia é que qualquer culto do dia serve. */
 function pessoaTemPedidoPara(pessoa, culto){
-  return (pessoa.pedidos||[]).some(pd => dataDentroDoIntervalo(culto.dataISO, pd.data, pd.dataFim) && (!pd.horario || pd.horario===culto.slot));
+  return (pessoa.pedidos||[]).some(pd => {
+    if(!dataDentroDoIntervalo(culto.dataISO, pd.data, pd.dataFim)) return false;
+    if(pd.horario) return pd.horario===culto.slot;
+    const disp = pessoa.disponibilidade || {};
+    return !!disp[culto.slot] || !slotsDoDia(culto.dataISO).some(s=>disp[s.key]);
+  });
 }
 function pessoaElegivel(pessoa, culto){
   if(pessoaBloqueada(pessoa, culto)) return false;
@@ -572,7 +583,7 @@ function repRowHtml(kind, idx, item){
         <div class="field" style="margin-bottom:0">
           <label>Horário (se domingo)</label>
           <select class="rep-horario">
-            <option value="">Dia todo</option>
+            <option value="">${kind==='pedido'?'Horário da disponibilidade':'Dia todo'}</option>
             ${SLOTS.filter(s=>s.weekday===0).map(s=>`<option value="${s.key}" ${item.horario===s.key?'selected':''}>${formatarHoraCurta(horaDoSlot(s.key))}</option>`).join('')}
           </select>
         </div>
