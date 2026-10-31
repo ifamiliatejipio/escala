@@ -1901,7 +1901,7 @@ function importarEscalaDeTxt(texto){
     if(!linha) return;
     const semAsteriscos = (linha.startsWith('*') && linha.endsWith('*') && linha.length>1) ? linha.slice(1,-1) : linha;
     const ehLinhaPessoa = /^\d+\.\s/.test(semAsteriscos);
-    const mHeader = !ehLinhaPessoa && semAsteriscos.match(/(\d{2})\/(\d{2})\/(\d{2})\s*\|\s*(\d{2}:\d{2})h/);
+    const mHeader = !ehLinhaPessoa && semAsteriscos.match(/(\d{2})\/(\d{2})\/(\d{2})(?:\s*–[^|]*)?\s*\|\s*(\d{2}:\d{2})h/); // "– NOME" opcional (datas especiais)
     if(mHeader){
       const [, dd, mm, yy, hora] = mHeader;
       const dataISO = `20${yy}-${mm}-${dd}`;
