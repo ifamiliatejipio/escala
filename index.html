@@ -175,6 +175,12 @@ function formatarHoraCurta(hhmm){
   const [h,m] = hhmm.split(':');
   return m==='00' ? `${Number(h)}h` : `${Number(h)}h${m}`;
 }
+/* Datas especiais (Configurações): numa data cadastrada, valem só os cultos escolhidos pra ela (lista
+   vazia = nenhum culto no dia), com um nome opcional (ex: "Culto especial batismo"). */
+function dataEspecial(dataISO){ return (state.config.datasEspeciais||[]).find(d=>d.data===dataISO) || null; }
+function formatarDataBR(dataISO){ const [a,m,d] = dataISO.split('-'); return `${d}/${m}/${a}`; }
+const DIAS_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+function weekdayDeISO(dataISO){ const [a,m,d] = dataISO.split('-').map(Number); return new Date(a, m-1, d).getDay(); }
 /* Domingo tem vários cultos, então o rótulo inclui o horário configurado (ex: "Domingo 16h"). */
 function slotLabel(s){ return s.weekday===0 ? `Domingo ${formatarHoraCurta(horaDoSlot(s.key))}` : s.label; }
 const MINISTERIOS = ['Eles','Elas','Topo'];
@@ -293,13 +299,16 @@ function gerarCultosDoMes(anoMes){
   for(let dia=1; dia<=totalDias; dia++){
     const data = new Date(ano, mes-1, dia);
     const wd = data.getDay();
-    SLOTS.filter(s=>s.weekday===wd && slotAtivo(s.key)).forEach(s=>{
+    const dataISO = `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    const especial = dataEspecial(dataISO);
+    SLOTS.filter(s=>s.weekday===wd && (especial ? especial.cultos.includes(s.key) : slotAtivo(s.key))).forEach(s=>{
       const horaCulto = horaDoSlot(s.key);
+      const nomeEspecial = especial && especial.nome ? especial.nome : '';
       cultos.push({
         id: `c_${ano}${String(mes).padStart(2,'0')}${String(dia).padStart(2,'0')}_${s.key}`,
-        data, slot: s.key, horaCulto,
-        label: `${slotLabel(s)} — ${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`,
-        dataISO: `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`,
+        data, slot: s.key, horaCulto, nomeEspecial,
+        label: `${slotLabel(s)}${nomeEspecial?` (${nomeEspecial})`:''} — ${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`,
+        dataISO,
         assigned: {Eles:[], Elas:[], TopoH:[], TopoF:[], Supervisor:[]},
         observacoes: {}, // personId -> texto da nota manual
       });
@@ -879,6 +888,33 @@ function renderConfig(){
   </div>
 
   <div class="card">
+    <h2>Datas especiais</h2>
+    <p class="tiny">Use quando uma data foge do normal (culto especial, feriado, evento). Nessa data entram <strong>só os cultos marcados abaixo</strong>, com o nome que você der. As pessoas que serviriam nos outros cultos desse dia são escaladas automaticamente em outras datas do mês. Desmarque todos os cultos pra deixar o dia sem culto. Gere a escala de novo depois de mudar.</p>
+    ${(state.config.datasEspeciais||[]).length ? `
+    <table>
+      <thead><tr><th>Data</th><th>Nome</th><th>Cultos nesse dia</th><th></th></tr></thead>
+      <tbody>
+        ${[...state.config.datasEspeciais].sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
+          <tr>
+            <td>${DIAS_SEMANA[weekdayDeISO(d.data)]}, ${formatarDataBR(d.data)}</td>
+            <td>${esc(d.nome||'—')}</td>
+            <td class="tiny">${d.cultos.length ? SLOTS.filter(s=>d.cultos.includes(s.key)).map(slotLabel).join(', ') : 'Sem culto'}</td>
+            <td class="row-actions">
+              <button type="button" class="ghost small esp-editar" data-data="${d.data}">Editar</button>
+              <button type="button" class="danger small esp-remover" data-data="${d.data}">Remover</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>` : '<div class="tiny">Nenhuma data especial cadastrada.</div>'}
+    <div class="toolbar" style="align-items:end; margin-top:12px;">
+      <div class="field" style="margin-bottom:0; max-width:180px;"><label>Data</label><input type="date" id="esp-data"></div>
+      <div class="field" style="margin-bottom:0; max-width:320px;"><label>Nome do culto (opcional)</label><input type="text" id="esp-nome" placeholder="Ex: Culto especial batismo"></div>
+    </div>
+    <div id="esp-cultos" class="checks" style="margin-top:8px;"><span class="tiny">Escolha a data pra ver os cultos do dia.</span></div>
+    <div class="toolbar"><button type="button" class="secondary" id="esp-salvar">Salvar data especial</button></div>
+  </div>
+
+  <div class="card">
     <h2>Antecedência de chegada</h2>
     <div class="field" style="max-width:220px;">
       <label>Minutos antes do início</label>
@@ -1453,7 +1489,52 @@ function bindTabelaPessoasEvents(){
   if(pdfPessoasBtn) pdfPessoasBtn.addEventListener('click', gerarPdfPessoas);
 }
 
+function renderCultosDataEspecial(dataISO, marcados){
+  const wrap = document.getElementById('esp-cultos');
+  if(!dataISO){ wrap.innerHTML = '<span class="tiny">Escolha a data pra ver os cultos do dia.</span>'; return; }
+  const wd = weekdayDeISO(dataISO);
+  const doDia = SLOTS.filter(s=>s.weekday===wd);
+  if(!doDia.length){ wrap.innerHTML = `<span class="tiny">${DIAS_SEMANA[wd]} não tem culto cadastrado.</span>`; return; }
+  wrap.innerHTML = `<strong class="tiny">Cultos em ${DIAS_SEMANA[wd]}, ${formatarDataBR(dataISO)}:</strong>` + doDia.map(s=>`
+    <label class="check-pill ${marcados.includes(s.key)?'checked':''}">
+      <input type="checkbox" class="esp-culto" value="${s.key}" ${marcados.includes(s.key)?'checked':''}> ${slotLabel(s)}
+    </label>`).join('');
+  wrap.querySelectorAll('.esp-culto').forEach(cb=>cb.addEventListener('change', ()=>cb.closest('.check-pill').classList.toggle('checked', cb.checked)));
+}
+function bindDatasEspeciaisEvents(){
+  const dataInp = document.getElementById('esp-data');
+  dataInp.addEventListener('change', ()=>{
+    const existente = dataEspecial(dataInp.value);
+    if(existente) document.getElementById('esp-nome').value = existente.nome || '';
+    // data nova: começa só com os cultos que já acontecem normalmente nesse dia da semana
+    const marcados = existente ? existente.cultos : SLOTS.filter(s=>dataInp.value && s.weekday===weekdayDeISO(dataInp.value) && slotAtivo(s.key)).map(s=>s.key);
+    renderCultosDataEspecial(dataInp.value, marcados);
+  });
+  document.getElementById('esp-salvar').addEventListener('click', ()=>{
+    const data = dataInp.value;
+    if(!data){ toast('Escolha a data.'); return; }
+    const cultos = [...document.querySelectorAll('.esp-culto:checked')].map(cb=>cb.value);
+    const nome = document.getElementById('esp-nome').value.replace(/;/g, ',').trim(); // ; separa colunas no .csv da escala
+    if(!cultos.length && !confirm(`Nenhum culto marcado: ${formatarDataBR(data)} vai ficar sem culto. Continuar?`)) return;
+    state.config.datasEspeciais = (state.config.datasEspeciais||[]).filter(d=>d.data!==data).concat([{data, nome, cultos}]);
+    toast(`Data especial ${formatarDataBR(data)} salva.`);
+    render();
+  });
+  document.querySelectorAll('.esp-editar').forEach(btn=>btn.addEventListener('click', ()=>{
+    const d = dataEspecial(btn.dataset.data);
+    dataInp.value = d.data;
+    document.getElementById('esp-nome').value = d.nome || '';
+    renderCultosDataEspecial(d.data, d.cultos);
+    dataInp.scrollIntoView({block:'center'});
+  }));
+  document.querySelectorAll('.esp-remover').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!confirm(`Remover a data especial ${formatarDataBR(btn.dataset.data)}? O dia volta a ter os cultos normais.`)) return;
+    state.config.datasEspeciais = (state.config.datasEspeciais||[]).filter(d=>d.data!==btn.dataset.data);
+    render();
+  }));
+}
 function bindConfigEvents(){
+  bindDatasEspeciaisEvents();
   document.querySelectorAll('.cfg-ativo').forEach(cb=>{
     cb.addEventListener('change', ()=>cb.closest('.check-pill').classList.toggle('checked', cb.checked));
   });
@@ -1662,7 +1743,8 @@ function cabecalhoCulto(culto){
   const hora = culto.horaCulto || '';
   const chegada = subtrairMinutos(hora, state.config.minutosAntecedencia||0);
   const horaFmt = hora ? hora+'h' : '';
-  return `${slot.labelCurta} ${dataCurta} | ${horaFmt} – CHEGAR ÀS ${chegada}h`;
+  const nome = culto.nomeEspecial ? ` – ${culto.nomeEspecial.toUpperCase()}` : '';
+  return `${slot.labelCurta} ${dataCurta}${nome} | ${horaFmt} – CHEGAR ÀS ${chegada}h`;
 }
 const MESES_PT = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
 function nomeMesExtenso(anoMes){
