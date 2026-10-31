@@ -183,12 +183,30 @@ const CATEGORIA_LABEL = {Eles:'Eles', Elas:'Elas', TopoH:'Topo (homem)', TopoF:'
 
 const DEFAULT_CONFIG = {
   quotas: {Eles:2, Elas:3, TopoH:1, TopoF:1, Supervisor:1},
-  horarios: {terca:'19:30', quarta:'19:30', quinta:'19:30', dom10:'10:00', dom15:'15:00', dom17:'17:00', dom19:'19:00'},
-  cultosAtivos: {terca:true, quarta:true, quinta:true, dom10:true, dom15:true, dom17:true, dom19:true},
+  horarios: {terca:'19:30', quarta:'19:30', quinta:'19:30', dom10:'10:00', dom15:'15:00', dom17:'16:00', dom19:'19:00'},
+  cultosAtivos: {terca:true, quarta:true, quinta:true, dom10:true, dom15:false, dom17:true, dom19:true},
   minutosAntecedencia: 50,
 };
 
 let state = { people: [], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+
+/* Os cultos de domingo 15h e 17h foram unificados num só, às 16h (usa a linha "dom17" dos SLOTS).
+   Roda uma vez em cada cadastro carregado (nuvem ou arquivo): quem tinha 15h passa a ter 16h, pedidos
+   e bloqueios de 15h viram 16h, e o culto das 15h fica desligado. Marca config.unificouDomingo16 pra
+   não repetir — assim, se um dia o 15h voltar e for religado em Configurações, nada é desfeito. */
+function moverDom15Para16(p){
+  if(p.disponibilidade && p.disponibilidade.dom15){ p.disponibilidade.dom15 = false; p.disponibilidade.dom17 = true; }
+  [...(p.pedidos||[]), ...(p.bloqueios||[])].forEach(x=>{ if(x.horario==='dom15') x.horario = 'dom17'; });
+}
+function unificarDomingo16(st){
+  st.config = st.config || {};
+  if(st.config.unificouDomingo16) return;
+  (st.people||[]).forEach(moverDom15Para16);
+  st.config.horarios = Object.assign({}, DEFAULT_CONFIG.horarios, st.config.horarios, {dom17:'16:00'});
+  st.config.cultosAtivos = Object.assign({}, DEFAULT_CONFIG.cultosAtivos, st.config.cultosAtivos, {dom15:false, dom17:true});
+  st.config.unificouDomingo16 = true;
+}
+unificarDomingo16(state);
 let escalaAtual = null;
 let blocosExportAtuais = [];
 let currentTab = 'pessoas';
@@ -1898,6 +1916,7 @@ function bindDadosEvents(){
         const novo = JSON.parse(reader.result);
         if(!novo.people) throw new Error('formato inválido');
         state = { people: novo.people, config: Object.assign(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), novo.config||{}) };
+        unificarDomingo16(state);
         editingId = null;
         toast(`Cadastro importado: ${state.people.length} pessoa(s).`);
         switchTab('pessoas');
@@ -1914,6 +1933,7 @@ function bindDadosEvents(){
     reader.onload = ()=>{
       try{
         const novos = parseCsv(reader.result);
+        if(!slotAtivo('dom15')) novos.forEach(moverDom15Para16); // planilha antiga com coluna Domingo15
         state.people = state.people.concat(novos);
         toast(`${novos.length} pessoa(s) importada(s) do CSV.`);
         switchTab('pessoas');
@@ -1925,6 +1945,7 @@ function bindDadosEvents(){
   document.getElementById('limpar-tudo').addEventListener('click', ()=>{
     if(!confirm('Tem certeza que deseja apagar todas as pessoas cadastradas?')) return;
     state = { people:[], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+    unificarDomingo16(state);
     escalaAtual = null;
     toast('Cadastro apagado.');
     render();
@@ -2046,6 +2067,7 @@ function aplicarPayloadRemoto(payloadTexto){
   const dados = JSON.parse(payloadTexto);
   nuvemAplicandoRemoto = true;
   state = dados.state || { people:[], config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)) };
+  unificarDomingo16(state); // se mudar algo, o envio automático manda a versão unificada de volta pra nuvem
   escalaAtual = dados.escalaAtual ? Object.assign({}, dados.escalaAtual, { cultos: hidratarCultos(dados.escalaAtual.cultos) }) : null;
   nuvemUltimoPayloadEnviado = payloadTexto;
   editingId = null;
